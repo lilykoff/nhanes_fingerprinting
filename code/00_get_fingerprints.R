@@ -51,7 +51,6 @@ get_grid_data_lagsec = function(s, lag, data) {
 }
 
 sample_rate = 80L
-# time_lags = c(15L, 30L, 45L)
 time_lags = c(12L, 24L, 36L)
 gcell_size = 0.25
 max_vm  = 3  # we set max vm to 3 based on EDA, but could take actual max vm
