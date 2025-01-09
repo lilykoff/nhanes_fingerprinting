@@ -3,7 +3,7 @@ library(tidymodels)
 source(here::here("code", "R", "utils.R"))
 fold = NULL
 rm(list = c("fold"))
-force = FALSE
+force = TRUE
 n_cores = parallel::detectCores() - 1
 
 filenames = readRDS(here::here("data", "lily", "data", "fingerprint_folds_temporal.rds"))

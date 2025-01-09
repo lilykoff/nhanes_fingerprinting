@@ -29,7 +29,8 @@ pfr_fit =
     method = "REML", data = xdf)
 
 predicted_values = predict(pfr_fit, newdata = xdf, type = "link")
-
+predicted_values2 = predicted_values %>% as.numeric()
+bind_cols(predicted_values %>% as.numeric, predicted_values2) %>% janitor::clean_names()
 pfr_fit_nonlinear =
   pfr(
     outcome ~ af(mat, argvals = seq(1, 432)),

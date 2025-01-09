@@ -1,8 +1,12 @@
 library(tidyverse)
 library(tidymodels)
+library(future)
+library(furrr)
 # df = readr::read_csv(here::here("data", "lily", "data", "sample_grid_cells.csv.gz"))
-force = FALSE
+force = TRUE
 
+
+plan(multicore, workers = 8)
 if(!file.exists(here::here("data", "lily", "data", "covar_reg.rds")) || force) {
   df = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells.csv.gz"))
   # everyone has 180 sec of data
@@ -38,7 +42,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg.rds")) || force) {
   cols = df_nzv_summ_covar %>% select(starts_with("x")) %>% colnames()
 
   sex_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
         .f = function(x){
          tmp =
            df_nzv_summ_covar %>%
@@ -52,7 +56,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg.rds")) || force) {
     mutate(reg_type = "sex_uni")
 
   age_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -66,7 +70,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg.rds")) || force) {
     mutate(reg_type = "age_uni")
 
   mort_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -81,7 +85,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg.rds")) || force) {
     mutate(reg_type = "mort_uni")
 
   agesex_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -96,7 +100,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg.rds")) || force) {
     mutate(reg_type = "age_sex")
 
   agesexmort_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -111,7 +115,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg.rds")) || force) {
     mutate(reg_type = "age_sex_mort")
 
   agemort_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -171,7 +175,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg_fine.rds")) || for
   cols = df_nzv_summ_covar %>% select(starts_with("x")) %>% colnames()
 
   sex_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -185,7 +189,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg_fine.rds")) || for
     mutate(reg_type = "sex_uni")
 
   age_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -199,7 +203,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg_fine.rds")) || for
     mutate(reg_type = "age_uni")
 
   mort_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -214,7 +218,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg_fine.rds")) || for
     mutate(reg_type = "mort_uni")
 
   agesex_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -229,7 +233,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg_fine.rds")) || for
     mutate(reg_type = "age_sex")
 
   agesexmort_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -244,7 +248,7 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg_fine.rds")) || for
     mutate(reg_type = "age_sex_mort")
 
   agemort_coefs =
-    map_dfr(.x = cols,
+    future_map_dfr(.x = cols,
             .f = function(x){
               tmp =
                 df_nzv_summ_covar %>%
@@ -258,8 +262,8 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg_fine.rds")) || for
             }) %>%
     mutate(reg_type = "age_mort")
 
-  age_coefs %>% mutate(mag = abs(estimate)) %>% arrange(desc(mag))
-  sex_coefs %>% mutate(mag = abs(estimate)) %>% arrange(desc(mag))
+  # age_coefs %>% mutate(mag = abs(estimate)) %>% arrange(desc(mag))
+  # sex_coefs %>% mutate(mag = abs(estimate)) %>% arrange(desc(mag))
 
   res =
     bind_rows(age_coefs, sex_coefs, mort_coefs, agesex_coefs,
@@ -267,3 +271,4 @@ if(!file.exists(here::here("data", "lily", "data", "covar_reg_fine.rds")) || for
 
   saveRDS(res, here::here("data", "lily", "data", "covar_reg_fine.rds"))
 }
+plan(sequential)

@@ -58,6 +58,24 @@ key = tibble(old_names, clean_names)
 df_fine = df_fine %>%
   full_join(key, by = c("cell" = "old_names"))
 
+
+### get largest coefficient for age res
+df_fine %>%
+  left_join(age_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag) & reg_type == "age_sex_mort") %>%
+  arrange(desc(estimate)) %>%
+  slice(1) %>%
+  pull(clean_names)
+
+df_fine %>%
+  left_join(age_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag) & reg_type == "age_sex_mort") %>%
+  arrange(estimate) %>%
+  slice(1) %>%
+  pull(clean_names)
+
+
+
 df_fine %>%
   left_join(age_res, by = c("clean_names" = "var")) %>%
   filter(!is.na(lag)) %>%
@@ -69,7 +87,7 @@ df_fine %>%
   ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
   # scale_fill_viridis() +
   scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
-  facet_wrap(.~lag) +
+  # facet_grid(reg_type~lag) +
   geom_tile(col = "black")+
   theme_classic() +
   geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
@@ -83,12 +101,51 @@ df_fine %>%
   ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
   # scale_fill_viridis() +
   scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
-  facet_wrap(.~lag) +
+  # facet_wrap(.~lag) +
+  facet_grid(reg_type~lag) +
   geom_tile()+
   theme_grey() +
   geom_raster(interpolate=TRUE) +
   # geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
   labs(x = "Signal", y = "Lag Signal", title = "Effect of Increasing Age on Grid Cells")
+
+
+df_fine %>%
+  left_join(sex_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag)) %>%
+  filter(p.value < 0.001) %>%
+  ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
+  # scale_fill_viridis() +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+  # facet_wrap(.~lag) +
+  facet_grid(reg_type~lag) +
+  geom_tile()+
+  theme_grey() +
+  geom_raster(interpolate=TRUE) +
+  # geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
+  labs(x = "Signal", y = "Lag Signal", title = "Effect of Male on Grid Cells")
+
+
+df_fine %>%
+  left_join(mort_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag)) %>%
+  filter(p.value < 0.001) %>%
+  ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
+  # scale_fill_viridis() +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+  # facet_wrap(.~lag) +
+  facet_grid(reg_type~lag) +
+  geom_tile()+
+  theme_grey() +
+  geom_raster(interpolate=TRUE) +
+  # geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
+  labs(x = "Signal", y = "Lag Signal", title = "Effect of Mortality on Grid Cells")
+
+
+
+
+
+
 
 xdf = df_fine %>%
   left_join(age_res, by = c("clean_names" = "var"))  %>%

@@ -94,7 +94,7 @@ fit_model = function(subject, train, test) {
   return(preds)
 }
 
-outfile_temporal = here::here("data", "lily", "data", "fingerprint_res_temporal", paste0(size, "_rf"), paste0("fold_", ifold, ".rds"))
+outfile_temporal = here::here("data", "lily", "data", "fingerprint_res_temporal", paste0(size, "rf"), paste0("fold_", ifold, ".rds"))
 dir_temp = dirname(outfile_temporal)
 
 if(!file.exists(outfile_temporal) | force){
