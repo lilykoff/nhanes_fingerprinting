@@ -141,5 +141,46 @@ m_min =
             max_id = first(id[var == max(var)]))
 m_min
 
+#####
+> m_min
+# A tibble: 1 × 2
+min_id max_id
+<dbl>  <int>
+  1  70026  25254
+
+> m_max
+# A tibble: 1 × 2
+min_id max_id
+<int>  <int>
+  1  25622  21582
+
+> s_min
+# A tibble: 1 × 2
+min_id max_id
+<int>  <int>
+  1  75903  39628
+
+> s_max
+# A tibble: 1 × 2
+min_id max_id
+<dbl>  <int>
+  1  83595  24302
+
+> a_min
+# A tibble: 1 × 2
+min_id max_id
+<dbl>  <int>
+  1  76568  46745
+
+m_min
+# A tibble: 1 × 2
+min_id max_id
+<int>  <int>
+  1  61434  19394
+
+
+file = here::here("data", "lily", "data", "adept_walking_dfs", "pax_y", "61434.csv.gz")
+
+x =read_csv(file)
 
 
