@@ -1,0 +1,718 @@
+---
+title: "Working notebook"
+format: 
+  html:
+    toc: true
+    toc-location: left
+    embed-resources: true
+    code-background: true
+    code-tools: true
+    code-fold: true
+    code-block-border-left: true
+execute:
+  echo: false
+  cache: true
+  message: false
+  warning: false
+editor: source
+---
+
+# Fingerprinting walking in NHANES 
+
+**1**: apply ADEPT to all subjects in NHANES 
+
+**2**: Take any seconds that ADEPT identifies as having any steps 
+
+**3**: Filter to find some consecutive seconds of walking
+
+**4**: Calculate "fingerprints" from these seconds 
+
+**5**: Predict identities 
+
+**6**: Associate fingerprints with scalars (age, sex, mortality risk, etc)
+
+
+## Distribution of walking 
+
+A bout is considered walking if there is no more than two seconds between seconds identified as walking and the bout is at least 10 seconds long. We can look at the distribution of these bouts: 
+
+```{css define scrollable chunk, echo = FALSE}
+.output {
+max-height: 500px;
+overflow-y: scroll;
+}
+```
+
+
+```{r}
+# load data
+
+library(tidyverse)
+library(tidymodels) 
+library(viridis)
+library(gt)
+library(gtsummary)
+theme_set(theme_light())
+walking_seg = readr::read_csv(here::here("data", "walking_segments.csv.gz"))
+covars = readRDS(here::here("data", "covariates_accel_mortality_df.rds"))
+cells = readr::read_csv(here::here("data", "sample_grid_cells.csv.gz"))
+col1= "#6388B4FF"; col2 = "#FFAE34FF"; col3 = "#EF6F6AFF"; col4 = "#8CC2CAFF"
+
+
+x_vars = seq(0, 3, 0.25)
+
+df = tibble(vm = seq(0, 3, 0.125)) %>%
+    mutate(lag_vm = dplyr::lag(vm, n = 1)) %>%   # for each second, calculate vm and lagged vm
+    mutate(
+      cut_sig = cut(
+        vm,
+        breaks = seq(0, 3, by = 0.25),
+        include.lowest = T
+      ),
+      cut_lagsig = cut(
+        lag_vm,
+        breaks = seq(0, 3, by = 0.25),
+        include.lowest = T
+      )
+    ) %>%
+    drop_na() %>% # count # points in each "grid cell"
+    count(cut_sig, cut_lagsig, .drop = FALSE) %>%
+    mutate(
+      cell = paste(cut_sig, cut_lagsig, sep = "_"),
+      num_x  = as.numeric(cut_sig),
+      num_y = as.numeric(cut_lagsig)
+    )
+
+old_names = unique(df$cell)
+# clean_names = janitor::clean_names(old_names)
+
+temp =
+  tibble(x = old_names,
+         y = seq(1:length(old_names))) %>%
+  pivot_wider(names_from = x, values_from = y)
+clean_names = janitor::clean_names(temp) %>%
+  colnames()
+
+key = tibble(old_names, clean_names)
+
+df = df %>%
+  full_join(key, by = c("cell" = "old_names"))
+
+x_vars = seq(0, 3, 0.1)
+
+df_fine = tibble(vm = seq(0, 3, 0.05)) %>%
+    mutate(lag_vm = dplyr::lag(vm, n = 1)) %>%   # for each second, calculate vm and lagged vm
+    mutate(
+      cut_sig = cut(
+        vm,
+        breaks = seq(0, 3, by = 0.1),
+        include.lowest = T
+      ),
+      cut_lagsig = cut(
+        lag_vm,
+        breaks = seq(0, 3, by = 0.1),
+        include.lowest = T
+      )
+    ) %>%
+    drop_na() %>% # count # points in each "grid cell"
+    count(cut_sig, cut_lagsig, .drop = FALSE) %>%
+    mutate(
+      cell = paste(cut_sig, cut_lagsig, sep = "_"),
+      num_x  = as.numeric(cut_sig),
+      num_y = as.numeric(cut_lagsig)
+    )
+
+old_names = unique(df_fine$cell)
+
+temp =
+  tibble(x = old_names,
+         y = seq(1:length(old_names))) %>%
+  pivot_wider(names_from = x, values_from = y)
+clean_names = janitor::clean_names(temp) %>%
+  colnames()
+
+key = tibble(old_names, clean_names)
+
+df_fine = df_fine %>%
+  full_join(key, by = c("cell" = "old_names"))
+
+```
+
+```{r}
+summary(walking_seg$n_seconds)
+quantile(walking_seg$n_seconds, 0.995)
+
+walking_seg %>% 
+  ggplot(aes(x = n_seconds)) + 
+  geom_histogram(col = "black", binwidth = 10) + 
+  scale_x_continuous(limits = c(0,108), breaks=seq(0,110,10)) + 
+  theme_light() + 
+  labs(x = "Number of seconds in walking bout", y = "Count", title = "Distribution of walking bouts")
+```
+
+We can also look at the distribution of the max consecutive bout, per person. 
+
+```{r}
+walking_seg %>% 
+  group_by(id) %>% 
+  summarize(n_seconds = max(n_seconds)) %>% 
+  ggplot(aes(x = n_seconds)) + 
+  geom_histogram(col = "black", binwidth = 10) + 
+  labs(x = "Max walking bout length (sec)", y = "Count", title = "Distribution of max bout length") + 
+    scale_x_continuous(limits = c(0,108), breaks=seq(0,110,10)) 
+
+```
+
+We can also look at the distribution of total walking time: 
+
+```{r}
+walking_seg %>% 
+  group_by(id) %>% 
+  summarize(walking_time = sum(n_seconds) / 60) %>% 
+  ggplot(aes(x = walking_time)) + 
+  geom_histogram(col = "black") + 
+  scale_x_continuous(limits=c(0,300), breaks = seq(0, 360, 30), labels = seq(0, 6, 0.5)) + 
+  labs(x = "Total walking time (hr)", y = "Count", title = "Distribution of total walking time per subject")
+
+```
+
+We will impose some cutoff for number of minutes of walking needed to be included in the analysis. We can examine the effect of different cutoffs: 
+
+```{r}
+per_sub = 
+  walking_seg %>% 
+  group_by(id) %>% 
+  summarize(walking_time = sum(n_seconds))
+
+calc_pct_inc =
+  function(cutoff) { 
+    per_sub %>% 
+      filter(walking_time >= cutoff) %>% nrow / nrow(per_sub) 
+  }
+
+quantile(per_sub$walking_time, 0.99)
+
+percentages = 
+  map_dbl(.x = seq(0, 13319, 30),
+          .f = calc_pct_inc)
+
+tibble(
+  pct = percentages,
+  cutoff = seq(0, 13319, 30)
+  ) %>% 
+  ggplot(aes(x = cutoff, y = pct))+
+  geom_point() +
+  scale_x_continuous(breaks = seq(0, 13300, 600),
+                     labels = seq(0, 13300/60, 600/60)) + 
+  labs(x = "Cutoff for inclusion (minutes)", y = "% Included") + 
+  geom_vline(aes(xintercept = 180), col = "red")
+
+tibble(
+  pct = percentages,
+  cutoff = seq(0, 13319, 30)
+  ) %>% 
+  filter(cutoff %in% c(30, 60, 120, 180, 240, 300)) %>% 
+  mutate(across(cutoff, ~.x / 60)) %>% 
+  mutate(across(pct, ~round(.x * 100, 0))) %>% 
+  knitr::kable()
+```
+Based on this, it seems like a cutoff of 180 seconds (3 minutes) seems reasonable, we are left with 85\% of individuals. 
+
+We can check if the excluded differ from the included in any systematic way: 
+
+```{r}
+included = per_sub %>% 
+  filter(walking_time >= 180) %>% 
+  pull(id)
+set.seed(123)
+samp_ids = sample(included, 5, replace = FALSE)
+# samp_ids
+covars %>% 
+  filter(SEQN %in% per_sub$id) %>% 
+  mutate(incl_walking = SEQN %in% included) %>% 
+  select(incl_walking, age_in_years_at_screening, gender, bin_mobilityproblem,
+         total_scsslsteps, num_valid_days, total_PAXMTSM, general_health_condition) %>% 
+  tbl_summary(by = incl_walking, missing = "no") 
+```
+It seems that those excluded are younger, likely to take fewer steps, have a mobility problem, and have fewer valid days of accelerometry data. 
+
+
+### Check some walking segments 
+
+```{r}
+#| class: output 
+
+
+subs = c("70024", "80988", "78109", "73098", "66708")
+for(sub in subs) {
+  sub1 = read_csv(here::here("data", "walking_samples", paste0(sub, ".csv.gz")))
+  segments_10 = sub1 %>%
+    select(second) %>%
+    distinct() %>%
+    mutate(
+      timediff = as.numeric(difftime(second, dplyr::lag(second, n = 1), units = "secs")),
+      ltwosec = (timediff <= 2) * 1,
+      rleid = data.table::rleid(ltwosec)
+    ) %>%
+    filter(ltwosec == 1) %>%
+    group_by(rleid) %>%
+    summarize(
+      n_seconds = n(),
+      start = min(second),
+      end = max(second)
+    ) %>%
+    filter(n_seconds >= 10)
+  
+  # key of those times
+  seconds_key =
+    segments_10 %>%
+    group_by(rleid) %>%
+    tidyr::expand(second = seq(start, end, "sec"))
+  
+  df_small =
+    sub1 %>%
+    inner_join(seconds_key, by = c("second"))
+  
+  rls = unique(df_small$rleid)
+  
+  p = df_small %>%
+    filter(rleid %in% rls[1:4]) %>%
+    group_by(rleid) %>%
+    mutate(index = row_number() / 80) %>%
+    ggplot(aes(x = index, y = vm)) +
+    geom_line() +
+    facet_wrap(. ~ rleid) +
+    labs(
+      x = "Second",
+      y = "VM",
+      title = paste0("4 Walking Segments from Subject ", sub)
+    ) +
+    theme(strip.text = element_blank())
+  print(p)
+}
+```
+
+
+## Obtaining fingerprints
+
+Once we have the walking segments, we can calculate fingerprints. We only use individuals with at least 180 seconds of walking. To ensure each person is equally represented in the sample, we randomly select 180 seconds from each person, and calculate the fingerprints for those seconds. We use grid cell size of 0.25$g$ and lags of 12, 24, and 36 samples, which corresponds to 15, 30, and 45Hz, respectively. 
+
+For each individual, we have 180 observations of $144 * 3 = 432$ potential predictors. 
+
+```{r}
+cells %>% 
+  summarize(across(-id, ~mean(.x))) %>% 
+  pivot_longer(cols = everything()) %>% 
+  mutate(lag = sub(".*\\_", "", name),
+         name = sub("_[^_]*$", "", name)) %>% 
+  right_join(df, by = c("name" = "clean_names")) %>% 
+  ggplot(aes(x = cut_sig, y = cut_lagsig, fill = value)) +
+  facet_grid(.~lag) +
+  geom_tile(col = "black") + 
+  scale_fill_viridis(name = "Mean value across all subjects") +
+  labs(x = "Signal", y = "Lag Signal", title = "Most frequent grid cells") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5),
+        legend.position = "bottom") 
+
+```
+```{r}
+cells %>% 
+  pivot_longer(cols = everything()) %>% 
+  mutate(lag = sub(".*\\_", "", name),
+         name = sub("_[^_]*$", "", name)) %>% 
+  right_join(df, by = c("name" = "clean_names")) %>% 
+  filter(lag == lag[1]) %>% 
+  ggplot(aes(x = value)) +
+  facet_grid(cut_sig ~ cut_lagsig, scales = "free") +
+  geom_histogram(col = "black") + 
+  theme(axis.text  = element_text(size = 4),
+        panel.grid.minor = element_blank()) + 
+  labs(x = "", y = "", title = "Distribution of grid cell data - lag = 12") 
+
+```
+
+```{r}
+
+ids = sample(unique(cells$id), 2, replace = FALSE)
+
+cells %>% 
+  filter(id %in% ids) %>% 
+  pivot_longer(cols = -id) %>% 
+  group_by(id, name) %>% 
+  summarize(across(value, ~mean(.x))) %>% 
+  ungroup() %>% 
+  mutate(lag = sub(".*\\_", "", name),
+         name = sub("_[^_]*$", "", name)) %>% 
+  right_join(df, by = c("name" = "clean_names")) %>% 
+  ggplot(aes(x = cut_sig, y = cut_lagsig, fill = value)) +
+  facet_grid(id~lag) +
+  geom_tile(col = "black") + 
+  scale_fill_viridis(name = "Mean value") +
+  labs(x = "Signal", y = "Lag Signal", title = "Comparison of two subjects") + 
+  theme(axis.text.x = element_text(angle = 45),
+        legend.position = "bottom") 
+
+
+
+
+```
+
+
+## Model fitting
+
+To fit models, we employ one vs. rest logistic regression. First, we remove predictors with near-zero variance as follows: 
+
+```{r}
+#| echo: true 
+
+nzv_trans =
+  recipe(id ~ ., data = cells) %>%
+  step_nzv(all_predictors())
+
+nzv_estimates = prep(nzv_trans)
+
+nzv = colnames(juice(nzv_estimates))
+
+# plot 
+cells %>% 
+  select(id, all_of(nzv)) %>% 
+  summarize(across(-id, ~mean(.x))) %>% 
+  pivot_longer(cols = everything()) %>% 
+  mutate(lag = sub(".*\\_", "", name),
+         name = sub("_[^_]*$", "", name)) %>% 
+  right_join(df, by = c("name" = "clean_names")) %>% 
+  filter(!is.na(lag)) %>%
+  ggplot(aes(x = cut_sig, y = cut_lagsig, fill = value)) +
+  facet_grid(.~lag) +
+  geom_tile(col = "black") + 
+  scale_fill_viridis(name = "Mean value across all subjects") +
+  labs(x = "Signal", y = "Lag Signal", title = "Most frequent grid cells") + 
+  theme(axis.text.x = element_text(angle = 45),
+        legend.position = "bottom") 
+```
+
+We then perform the regression. Because we have so many subjects, we perform the regressions in folds of increasing size, to determine how accuracy changes with the number of subjects in the models.
+
+## Prediction results 
+
+```{r}
+all_res = readRDS(here::here("data", "fingerprint_res_all.rds"))
+summary = 
+  all_res %>% mutate(across(contains("rank"), ~.x / n * 100)) %>%
+  group_by(n, type) %>% summarize(across(contains("rank"), ~mean(.x)))
+
+summary %>% 
+  filter(type == "regular") %>% 
+  select(-type) %>% 
+  pivot_longer(cols = -n) %>% 
+  ggplot(aes(x = n, y = value, col = name, group = name)) + 
+  geom_point() + 
+  geom_line() + 
+  scale_color_brewer(palette = "Dark2", name = "") + 
+  scale_x_continuous(breaks=c(100, 200, 300, 500, 1000, 2000, 4000)) + 
+  labs(x = "Number of subjects per fold", y = "Mean accuracy") 
+```
+
+
+We see that accuracy decreases with increasing number of subjects per fold. We can try boosting models, or oversampling, where we sample 100x (with replacement) for the individual who the model is being fit on. 
+
+```{r}
+summary %>% 
+  pivot_longer(cols = contains("rank")) %>% 
+  ggplot(aes(x = n, y = value, col = name, shape = type, linetype = type)) + 
+  geom_point() + 
+  geom_line() + 
+  scale_color_brewer(palette = "Dark2", name = "") + 
+  scale_x_continuous(breaks=c(100, 200, 300, 500, 1000, 2000, 4000)) + 
+  labs(x = "Number of subjects per fold", y = "Mean accuracy") 
+
+
+```
+
+
+Additional scenarios:  you are in the training, but not in the test. Vary the test to be different proportions of the training data. 
+
+```{r}
+# train not test 
+all_res = readRDS(here::here("data", "fingerprint_res_train_not_test.rds"))
+summary = 
+  all_res %>% 
+  mutate(pct_test = n_test / n_train * 100) %>% 
+  mutate(across(contains("rank"), ~.x / n_test * 100)) %>%
+  group_by(n_train, n_test, type, pct_test) %>% 
+  summarize(across(contains("rank"), ~mean(.x)))
+
+
+summary %>% 
+  filter(type == "regular" & n_test != 26) %>% 
+  ungroup() %>% 
+  select(-type) %>% 
+  pivot_longer(cols = c(rank1, rank5)) %>% 
+  ggplot(aes(x = n_train, y = value, col = pct_test, group = pct_test)) + 
+  geom_point() + 
+  facet_wrap(.~name) + 
+  geom_line() + 
+  scale_x_continuous(breaks=c(100, 200, 300, 500, 1000, 2000, 4000)) + 
+  labs(x = "Number of subjects per fold", y = "Mean accuracy") +
+  scale_color_viridis_c(name = "% subjects in test", breaks=seq(0,100,25), limits = c(0,100))+
+  theme(legend.position = "bottom")
+
+summary %>% 
+  filter(type == "over" & n_test != 26) %>% 
+  ungroup() %>% 
+  select(-type) %>% 
+  pivot_longer(cols = c(rank1, rank5)) %>% 
+  ggplot(aes(x = n_train, y = value, col = pct_test, group = pct_test)) + 
+  geom_point() + 
+  facet_wrap(.~name) + 
+  geom_line() + 
+  scale_x_continuous(breaks=c(100, 200, 300, 500, 1000, 2000, 4000)) + 
+  labs(x = "Number of subjects per fold", y = "Mean accuracy") +
+  scale_color_viridis_c(name = "% subjects in test", breaks=seq(0,100,25), limits = c(0,100))+
+  theme(legend.position = "bottom")
+```
+In the test, but not in the training where you want to know some diagnostic that indicates maybe this person isn’t in there at all. Like a confidence measure.
+
+Probabilities here represent max probability assigned to the impostor, or the probability that individual is true individual. The following is for 1000-person folds. 
+
+```{r}
+tnt = readRDS(here::here("data", "fingerprint_res_test_not_train.rds"))
+# tnt %>% 
+#   filter(proptrain == 0.1) %>% 
+#   mutate(imposter = if_else(is.na(probsubj), "Imposter", "Subject"),
+#          prob = if_else(is.na(probsubj), maxprob, probsubj)) %>% 
+#   ggplot(aes(x = fold, y = prob, col = imposter)) + 
+#   geom_boxplot(position = position_dodge()) + 
+#   scale_color_manual(name = "", values = c(col1, col2))
+
+tnt %>% 
+  mutate(imposter = if_else(is.na(probsubj), "Imposter", "Subject"),
+         prob = if_else(is.na(probsubj), maxprob, probsubj)) %>% 
+  ggplot(aes(x = as.factor(proptrain), y = prob, col = imposter)) + 
+  geom_boxplot(position = position_dodge(), outlier.alpha = 0.4, outlier.size = 0.5) + 
+  scale_color_manual(name = "", values = c(col1, col2)) + 
+  labs(x = "Proportion of training in test", y = "Probability") + 
+  theme(legend.position = "bottom")
+
+tnt %>% 
+  mutate(imposter = if_else(is.na(probsubj), "Imposter", "Subject"),
+         prob = if_else(is.na(probsubj), maxprob, probsubj)) %>% 
+  ggplot(aes(x = prob, col = imposter)) + 
+  geom_density() +
+  facet_wrap(.~factor(proptrain), scales = "free") + 
+  scale_color_manual(name = "", values = c(col1, col2)) + 
+  labs(x = "Probability", y = "Density") + 
+  theme(legend.position = "bottom")
+
+tnt %>% 
+  filter(!is.na(probsubj)) %>% 
+  mutate(rank1 = ranksub == 1,
+         rank5 = ranksub <= 5) %>% 
+  group_by(proptrain) %>% 
+  summarize(across(c(rank1, rank5), ~sum(.x) / n() * 100)) %>% 
+  pivot_longer(cols = contains("rank")) %>% 
+  ggplot(aes(x = proptrain, y = value, color = name)) + 
+  geom_point() + 
+  geom_line() + 
+  scale_color_brewer(palette = "Dark2", name = "", labels = c("Rank 1", "Rank 5")) +
+  labs(x = "Proportion of training in test", y = "Accuracy")+ 
+  scale_x_continuous(breaks=seq(0.1, 0.9, 0.1)) + 
+  scale_y_continuous(breaks=seq(70,100,5))
+```
+
+
+## Association of fingerprints with covariates 
+
+Next, we can regress the fingerprints on different covariates. 
+
+First, we remove grid cells with near zero variance. Then, we calculate for each subject the proportion of time spent in each grid cell. Finally, we perform separate regressions for each grid cell: 
+
+$$\text{time in cell}_i = \beta_0 + \beta_1\text{sex}_i $$ 
+$$\text{time in cell}_i = \beta_0 + \beta_1\text{age in years}_i $$ 
+
+$$\text{time in cell}_i = \beta_0 + \beta_1\text{mortality at 5 years}_i $$ 
+
+We do this for each cell, then plot the results. We adjust the p-values for multiple comparisons using Bonferroni. 
+
+```{r}
+age_sex_res = readRDS(here::here("data", "covar_reg.rds"))
+n_comparisons = age_sex_res %>% 
+  filter(term == "age") %>% 
+  nrow() 
+age_res = age_sex_res %>%
+  filter(term == "age") %>%
+  mutate(lag = sub(".*_(.*)", "\\1", var),
+         var = sub("(.*)_.*", "\\1", var),
+         p_bonf = p.adjust(p.value, method = "bonferroni", n = n_comparisons),
+         p_fdr = p.adjust(p.value, method = "fdr", n = n_comparisons))
+
+sex_res = age_sex_res %>%
+  filter(term == "genderMale") %>%
+  mutate(lag = sub(".*_(.*)", "\\1", var),
+         var = sub("(.*)_.*", "\\1", var),
+          p_bonf = p.adjust(p.value, method = "bonferroni", n = n_comparisons),
+         p_fdr = p.adjust(p.value, method = "fdr", n = n_comparisons))
+
+mort_res = age_sex_res %>%
+  filter(term == "mortstat1") %>%
+  mutate(lag = sub(".*_(.*)", "\\1", var),
+         var = sub("(.*)_.*", "\\1", var),
+          p_bonf = p.adjust(p.value, method = "bonferroni", n = n_comparisons),
+         p_fdr = p.adjust(p.value, method = "fdr", n = n_comparisons))
+
+
+df %>%
+  left_join(age_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag)) %>%
+  mutate(sig =
+           case_when(p_bonf < 0.001 ~ "***",
+                     p_bonf < 0.01 ~ "**",
+                     p_bonf < 0.05 ~ "*",
+                     TRUE ~ "")) %>%
+  ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
+  # scale_fill_viridis() +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0,
+                       name = "Estimate") +
+  facet_wrap(.~lag) +
+  geom_tile(col = "black")+
+  theme_classic() +
+  geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
+  labs(x = "Signal", y = "Lag Signal", title = "Effect of Increasing Age on Grid Cells") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = .5),
+        legend.position = "bottom") 
+
+
+df %>%
+  left_join(sex_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag)) %>%
+  mutate(sig =
+           case_when(p_bonf < 0.001 ~ "***",
+                     p_bonf < 0.01 ~ "**",
+                     p_bonf < 0.05 ~ "*",
+                     TRUE ~ "")) %>%
+  ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
+  theme_classic()+
+  facet_wrap(.~lag) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0,
+                       name = "Estimate") +
+  geom_tile(col = "black")+
+  geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
+  labs(x = "Signal", y = "Lag Signal", title = "Effect of Gender: Male on Grid Cells") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = .5),
+        legend.position = "bottom") 
+
+df %>%
+  left_join(mort_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag)) %>%
+  mutate(sig =
+           case_when(p_bonf < 0.001 ~ "***",
+                     p_bonf < 0.01 ~ "**",
+                     p_bonf < 0.05 ~ "*",
+                     TRUE ~ "")) %>%
+  ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
+  theme_classic()+
+  facet_wrap(.~lag) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0,
+                       name = "Estimate") +
+  geom_tile(col = "black")+
+  geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
+  labs(x = "Signal", y = "Lag Signal", title = "Effect of Mortality on Grid Cells") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = .5),
+        legend.position = "bottom") 
+
+
+```
+
+We can make finer grid cells to see if we can see any more fine-grained effects. 
+
+```{r}
+age_sex_res = readRDS(here::here("data", "covar_reg_fine.rds"))
+n_comparisons = age_sex_res %>% 
+  filter(term == "age") %>% 
+  nrow() 
+
+age_res = age_sex_res %>%
+  filter(term == "age") %>%
+  mutate(lag = sub(".*_(.*)", "\\1", var),
+         var = sub("(.*)_.*", "\\1", var),
+         p_bonf = p.adjust(p.value, method = "bonferroni", n = n_comparisons),
+         p_fdr = p.adjust(p.value, method = "fdr", n = n_comparisons))
+
+sex_res = age_sex_res %>%
+  filter(term == "genderMale") %>%
+  mutate(lag = sub(".*_(.*)", "\\1", var),
+         var = sub("(.*)_.*", "\\1", var),
+          p_bonf = p.adjust(p.value, method = "bonferroni", n = n_comparisons),
+         p_fdr = p.adjust(p.value, method = "fdr", n = n_comparisons))
+
+mort_res = age_sex_res %>%
+  filter(term == "mortstat1") %>%
+  mutate(lag = sub(".*_(.*)", "\\1", var),
+         var = sub("(.*)_.*", "\\1", var),
+          p_bonf = p.adjust(p.value, method = "bonferroni", n = n_comparisons),
+         p_fdr = p.adjust(p.value, method = "fdr", n = n_comparisons))
+
+
+df_fine %>%
+  left_join(age_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag)) %>%
+  mutate(estimate = if_else(p_bonf < 0.05, estimate, NA_real_)) %>% 
+  # mutate(sig =
+  #          case_when(p_bonf < 0.001 ~ "***",
+  #                    p_bonf < 0.01 ~ "**",
+  #                    p_bonf < 0.05 ~ "*",
+  #                    TRUE ~ "")) %>%
+  ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0,
+                       name = "Estimate") +
+  facet_wrap(.~lag) +
+  geom_tile(col = "black")+
+  theme_classic() +
+  # geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
+  labs(x = "Signal", y = "Lag Signal", title = "Effect of Increasing Age on Grid Cells") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = .5),
+        legend.position = "bottom") 
+
+
+df_fine %>%
+  left_join(sex_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag)) %>%
+  mutate(estimate = if_else(p_bonf < 0.05, estimate, NA_real_)) %>% 
+  # mutate(sig =
+  #          case_when(p_bonf < 0.001 ~ "***",
+  #                    p_bonf < 0.01 ~ "**",
+  #                    p_bonf < 0.05 ~ "*",
+  #                    TRUE ~ "")) %>%
+  ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
+  theme_classic()+
+  facet_wrap(.~lag) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0,
+                       name = "Estimate") +
+  geom_tile(col = "black")+
+  # geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
+  labs(x = "Signal", y = "Lag Signal", title = "Effect of Gender: Male on Grid Cells") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = .5),
+        legend.position = "bottom") 
+
+df_fine %>%
+  left_join(mort_res, by = c("clean_names" = "var")) %>%
+  filter(!is.na(lag)) %>%
+  mutate(estimate = if_else(p_bonf < 0.05, estimate, NA_real_)) %>% 
+  # mutate(sig =
+  #          case_when(p_bonf < 0.001 ~ "***",
+  #                    p_bonf < 0.01 ~ "**",
+  #                    p_bonf < 0.05 ~ "*",
+  #                    TRUE ~ "")) %>%
+  ggplot(aes(x =cut_sig, y = cut_lagsig, fill = estimate)) +
+  theme_classic()+
+  facet_wrap(.~lag) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0,
+                       name = "Estimate") +
+  geom_tile(col = "black")+
+  # geom_text(aes(x = cut_sig, y = cut_lagsig, label = sig))+
+  labs(x = "Signal", y = "Lag Signal", title = "Effect of Mortality on Grid Cells") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = .5),
+        legend.position = "bottom") 
+
+
+```
