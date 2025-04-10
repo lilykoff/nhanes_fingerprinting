@@ -1,9 +1,9 @@
 library(tidyverse)
 
+
 files = list.files(here::here("data", "lily", "data",
                               "fingerprint_prediction_results"),
                    full.names = TRUE)
-files = files[!grepl("over", files)]
 
 ovfiles = list.files(here::here("data", "lily", "data",
                               "fingerprint_prediction_results"),
@@ -27,13 +27,28 @@ all =
                 n_folds = n(),
                 across(contains("rank"),
                        list(mean = ~mean(.x, na.rm = TRUE),
+                            sd = ~sd(.x, na.rm = TRUE),
                             min = ~min(.x, na.rm = TRUE),
                             max = ~max(.x, na.rm = TRUE),
                             median = ~median(.x, na.rm = TRUE)))) %>%
       mutate(name = sub(".*res\\_(.+).rds.*", "\\1", x))
   })
 
-saveRDS(all, here::here("data", "lily", "data", "all_fprint_res.rds"))
+write_rds(all, here::here("data", "lily", "data", "all_fprint_res.rds"))
+
+all =
+  map_dfr(.x = files,
+          .f = function(x){
+            read_rds(x) %>%
+              mutate(across(contains("rank"), ~.x / n * 100)) %>%
+              mutate(name = sub(".*res\\_(.+).rds.*", "\\1", x)) %>%
+              mutate(fold = as.character(fold)) %>%
+              rename_with(.cols = contains("n_tar"), .fn = ~paste0("n_tar"))
+          })
+
+write_rds(all, here::here("data", "lily", "data", "all_fprint_folds.rds"))
+
+
 # all %>%
 #   select(name, n_sub, contains("mean"), everything()) %>%
 #   arrange(n_sub)
@@ -56,7 +71,7 @@ all_ov =
               ungroup()
           })
 
-saveRDS(all_ov, here::here("data", "lily", "data", "all_fprint_res_ov.rds"))
+write_rds(all_ov, here::here("data", "lily", "data", "all_fprint_res_ov.rds"))
 
 
 all_ov %>%
@@ -80,4 +95,7 @@ all_tp =
               mutate(name = sub(".*res\\_(.+).rds.*", "\\1", x))
           })
 
-saveRDS(all_tp, here::here("data", "lily", "data", "all_fprint_res_testpct.rds"))
+write_rds(all_tp, here::here("data", "lily", "data", "all_fprint_res_testpct.rds"))
+
+
+

@@ -6,9 +6,10 @@ library(furrr)
 source(here::here("code", "R", "utils.R"))
 fold = NULL
 rm(list = c("fold"))
-force = TRUE
+force = FALSE
 filenames = readRDS(here::here("data", "lily", "data", "fingerprint_folds.rds"))
 filenames_temp = readRDS(here::here("data", "lily", "data", "fingerprint_folds_temporal.rds"))
+filenames_long = readRDS(here::here("data", "lily", "data", "fingerprint_folds_long.rds"))
 if (!dir.exists(here::here("data", "lily", "data", "fingerprint_prediction_results"))) {
   dir.create(here::here(
     "data",
@@ -17,6 +18,7 @@ if (!dir.exists(here::here("data", "lily", "data", "fingerprint_prediction_resul
     "fingerprint_prediction_results"
   ))
 }
+
 
 get_summarized_predictions = function(predictions, rank = FALSE, exp = FALSE) {
   # predictions is tibble
@@ -77,8 +79,8 @@ get_summarized_predictions = function(predictions, rank = FALSE, exp = FALSE) {
 ###########
 ## summarize predictions for "regular" models
 dirs = c("100", "250", "500" ,"1000", "2500", "5000", "10000", "13367")
-# dir = dirs[1]
-# dir = dirs[5]
+dir = dirs[1]
+dir = dirs[5]
 for (dir in dirs) {
   dirnum = as.numeric(dir)
   outfile = here::here("data", "lily", "data","fingerprint_prediction_results",
@@ -152,32 +154,41 @@ for (dir in dirs) {
             rm(dat_nzv_test) # save memory
 
             all_preds =
-              map(
+              map_dfr(
                 .x = files,
-                .f = function(x) {
-                  read_rds(x) %>% as_tibble()
+                .f = function(x, exp = FALSE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
                 }
-              ) %>%
-              bind_cols()
-            # normalize probabilities
-            row_sums = rowSums(all_preds)
+              )
 
-            # normalize and add "true subject column"
-            all_preds =
+            res =
               all_preds %>%
-              bind_cols(sum = row_sums) %>%
-              rowwise() %>%
-              mutate(across(-sum, ~ .x / sum)) %>%
-              dplyr::select(-sum) %>%
-              ungroup() %>%
-              bind_cols(true_subject = true_sub_vec)
-
-            colnames(all_preds) = c(ids, "true_subject")
-            rm(row_sums)
-
-            res = get_summarized_predictions(all_preds, rank = TRUE) %>%
-              ungroup() %>%
+              group_by(true_subject) %>%
               mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
+              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0),
                 rank1pct = (rank <= dirnum * 0.01) * 1,
                 rank5pct = (rank <= dirnum * 0.05) * 1
               ) %>%
@@ -274,32 +285,41 @@ for (dir in dirs) {
             rm(dat_nzv_test)
 
             all_preds =
-              map(
+              map_dfr(
                 .x = files,
-                .f = function(x) {
-                  read_rds(x) %>% as_tibble()
+                .f = function(x, exp = FALSE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
                 }
-              ) %>%
-              bind_cols()
-            # normalize probabilities
-            row_sums = rowSums(all_preds)
+              )
 
-            # normalize and add "true subject column"
-            all_preds =
+            res =
               all_preds %>%
-              bind_cols(sum = row_sums) %>%
-              rowwise() %>%
-              mutate(across(-sum, ~ .x / sum)) %>%
-              dplyr::select(-sum) %>%
-              ungroup() %>%
-              bind_cols(true_subject = true_sub_vec)
-
-            colnames(all_preds) = c(ids, "true_subject")
-            rm(row_sums)
-
-            res = get_summarized_predictions(all_preds, rank = TRUE) %>%
-              ungroup() %>%
+              group_by(true_subject) %>%
               mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
+              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0),
                 rank1pct = (rank <= dirnum * 0.01) * 1,
                 rank5pct = (rank <= dirnum * 0.05) * 1
               ) %>%
@@ -395,33 +415,45 @@ for (dir in dirs) {
 
 
             true_sub_vec = test$id
+            rm(test)
 
             all_preds =
-              map(
+              map_dfr(
                 .x = files,
-                .f = function(x) {
-                  read_rds(x) %>% as_tibble()
+                .f = function(x, exp = FALSE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
                 }
-              ) %>%
-              bind_cols()
-            # normalize probabilities
-            row_sums = rowSums(all_preds)
+              )
 
-            # normalize and add "true subject column"
-            all_preds =
+            res =
               all_preds %>%
-              bind_cols(sum = row_sums) %>%
-              rowwise() %>%
-              mutate(across(-sum, ~ .x / sum)) %>%
-              dplyr::select(-sum) %>%
+              group_by(true_subject) %>%
+              mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
               ungroup() %>%
-              bind_cols(true_subject = true_sub_vec)
-
-            colnames(all_preds) = c(ids, "true_subject")
-            rm(row_sums)
-
-            res = get_summarized_predictions(all_preds, rank = TRUE) %>%
-              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0)
+              ) %>%
               mutate(
                 rank1pct = (rank <= dirnum * 0.01) * 1,
                 rank5pct = (rank <= dirnum * 0.05) * 1
@@ -431,7 +463,6 @@ for (dir in dirs) {
               mutate(fold = f, n_target = dirnum) %>%
               filter(n == dirnum)
             rm(all_preds)
-            rm(dat_nzv_test)
             res
           }
         )
@@ -519,40 +550,52 @@ for (dir in dirs) {
               "data",
               "lily",
               "data",
-              "fingerprint_res",
+              "fingerprint_res_temporal",
               paste0(dir, "xgb"),
               paste(ids, ".rds", sep = "")
             ))
 
 
             true_sub_vec = test$id
+            rm(test)
 
             all_preds =
-              map(
+              map_dfr(
                 .x = files,
-                .f = function(x) {
-                  read_rds(x) %>% as_tibble()
+                .f = function(x, exp = FALSE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
                 }
-              ) %>%
-              bind_cols()
-            # normalize probabilities
-            row_sums = rowSums(all_preds)
+              )
 
-            # normalize and add "true subject column"
-            all_preds =
+            res =
               all_preds %>%
-              bind_cols(sum = row_sums) %>%
-              rowwise() %>%
-              mutate(across(-sum, ~ .x / sum)) %>%
-              dplyr::select(-sum) %>%
+              group_by(true_subject) %>%
+              mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
               ungroup() %>%
-              bind_cols(true_subject = true_sub_vec)
-
-            colnames(all_preds) = c(ids, "true_subject")
-            rm(row_sums)
-
-            res = get_summarized_predictions(all_preds, rank = TRUE) %>%
-              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0)
+              ) %>%
               mutate(
                 rank1pct = (rank <= dirnum * 0.01) * 1,
                 rank5pct = (rank <= dirnum * 0.05) * 1
@@ -562,7 +605,6 @@ for (dir in dirs) {
               mutate(fold = f, n_target = dirnum) %>%
               filter(n == dirnum)
             rm(all_preds)
-            rm(dat_nzv_test)
             res
           }
         )
@@ -649,33 +691,44 @@ for (dir in dirs) {
 
 
             true_sub_vec = test$id
-
+            rm(test)
             all_preds =
-              map(
+              map_dfr(
                 .x = files,
-                .f = function(x) {
-                  read_rds(x) %>% as_tibble()
+                .f = function(x, exp = FALSE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
                 }
-              ) %>%
-              bind_cols()
-            # normalize probabilities
-            row_sums = rowSums(all_preds)
+              )
 
-            # normalize and add "true subject column"
-            all_preds =
+            res =
               all_preds %>%
-              bind_cols(sum = row_sums) %>%
-              rowwise() %>%
-              mutate(across(-sum, ~ .x / sum)) %>%
-              dplyr::select(-sum) %>%
+              group_by(true_subject) %>%
+              mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
               ungroup() %>%
-              bind_cols(true_subject = true_sub_vec)
-
-            colnames(all_preds) = c(ids, "true_subject")
-            rm(row_sums)
-
-            res = get_summarized_predictions(all_preds, rank = TRUE) %>%
-              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0)
+              ) %>%
               mutate(
                 rank1pct = (rank <= dirnum * 0.01) * 1,
                 rank5pct = (rank <= dirnum * 0.05) * 1
@@ -685,7 +738,6 @@ for (dir in dirs) {
               mutate(fold = f, n_target = dirnum) %>%
               filter(n == dirnum)
             rm(all_preds)
-            rm(dat_nzv_test)
             res
           }
         )
@@ -773,40 +825,51 @@ for (dir in dirs) {
               "data",
               "lily",
               "data",
-              "fingerprint_res",
+              "fingerprint_res_temporal",
               paste0(dir, "rf"),
               paste(ids, ".rds", sep = "")
             ))
 
 
             true_sub_vec = test$id
-
+            rm(test)
             all_preds =
-              map(
+              map_dfr(
                 .x = files,
-                .f = function(x) {
-                  read_rds(x) %>% as_tibble()
+                .f = function(x, exp = FALSE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
                 }
-              ) %>%
-              bind_cols()
-            # normalize probabilities
-            row_sums = rowSums(all_preds)
+              )
 
-            # normalize and add "true subject column"
-            all_preds =
+            res =
               all_preds %>%
-              bind_cols(sum = row_sums) %>%
-              rowwise() %>%
-              mutate(across(-sum, ~ .x / sum)) %>%
-              dplyr::select(-sum) %>%
+              group_by(true_subject) %>%
+              mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
               ungroup() %>%
-              bind_cols(true_subject = true_sub_vec)
-
-            colnames(all_preds) = c(ids, "true_subject")
-            rm(row_sums)
-
-            res = get_summarized_predictions(all_preds, rank = TRUE) %>%
-              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0)
+              ) %>%
               mutate(
                 rank1pct = (rank <= dirnum * 0.01) * 1,
                 rank5pct = (rank <= dirnum * 0.05) * 1
@@ -816,7 +879,6 @@ for (dir in dirs) {
               mutate(fold = f, n_target = dirnum) %>%
               filter(n == dirnum)
             rm(all_preds)
-            rm(dat_nzv_test)
             res
           }
         )
@@ -838,7 +900,7 @@ for (dir in dirs) {
                        paste0("prediction_res_", paste0(dir, "fnl", ".rds")))
 
   if(!file.exists(outfile) || force) {
-    if(dirnum <= 500){
+    if(dirnum < 500){
       all_preds = list.files(here::here("data", "lily", "data", "fingerprint_res", paste0(dir, "fnl")),
                              recursive = TRUE,
                              full.names = TRUE,
@@ -867,8 +929,106 @@ for (dir in dirs) {
         write_rds(summary, outfile, compress = "xz")
       })
       rm(x)
-      outfile = here::here("data", "lily", "data","fingerprint_prediction_results",
-                           paste0("prediction_res_", paste0(dir, "nlfnl", ".rds")))
+    } else {
+      x = try({
+        x = ceiling(nrow(filenames) / dirnum)
+        filenames = filenames %>%
+          mutate(fold = rep(1:x, each = dirnum)[1:nrow(filenames)])
+
+        folds = filenames %>%
+          count(fold) %>%
+          filter(n == dirnum) %>%
+          pull(fold)
+        xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells.csv.gz"))
+
+
+        summary = map_dfr(
+          .x = folds,
+          .f = function(f) {
+            ids = filenames %>% filter(fold == f) %>% pull(id) %>% as.character()
+            df =
+              xdf %>%
+              filter(id %in% ids)
+
+            set.seed(123)
+            is = initial_split(df, prop = 3/4, strata = id)
+            test = testing(is)
+            rm(df); rm(is)
+            files = file.path(here::here(
+              "data",
+              "lily",
+              "data",
+              "fingerprint_res",
+              paste0(dir, "fnl"),
+              paste(ids, ".rds", sep = "")
+            ))
+
+
+            true_sub_vec = test$id
+            rm(test)
+            all_preds =
+              map_dfr(
+                .x = files,
+                .f = function(x, exp = TRUE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
+                }
+              )
+
+            res =
+              all_preds %>%
+              group_by(true_subject) %>%
+              mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
+              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0),
+                rank1pct = (rank <= dirnum * 0.01) * 1,
+                rank5pct = (rank <= dirnum * 0.05) * 1
+              ) %>%
+              select(-rank) %>%
+              summarize(across(contains("rank"), sum), n = n()) %>%
+              mutate(fold = f, n_target = dirnum) %>%
+              filter(n == dirnum)
+            rm(all_preds)
+            res
+          }
+        )
+        write_rds(summary, outfile, compress = "xz")
+      })
+
+      rm(x)
+    }
+
+  }
+}
+
+for (dir in dirs) {
+  dirnum = as.numeric(dir)
+  outfile = here::here("data", "lily", "data","fingerprint_prediction_results",
+                       paste0("prediction_res_", paste0(dir, "nlfnl", ".rds")))
+
+  if(!file.exists(outfile) || force) {
+    if(dirnum < 500){
       all_preds = list.files(here::here("data", "lily", "data", "fingerprint_res", paste0(dir, "nlfnl")),
                              recursive = TRUE,
                              full.names = TRUE,
@@ -927,40 +1087,49 @@ for (dir in dirs) {
               "lily",
               "data",
               "fingerprint_res",
-              paste0(dir, "xgb"),
+              paste0(dir, "nlfnl"),
               paste(ids, ".rds", sep = "")
             ))
 
 
             true_sub_vec = test$id
-
+            rm(test)
             all_preds =
-              map(
+              map_dfr(
                 .x = files,
-                .f = function(x) {
-                  read_rds(x) %>% as_tibble()
+                .f = function(x, exp = TRUE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
                 }
-              ) %>%
-              bind_cols()
-            # normalize probabilities
-            row_sums = rowSums(all_preds)
+              )
 
-            # normalize and add "true subject column"
-            all_preds =
+            res =
               all_preds %>%
-              bind_cols(sum = row_sums) %>%
-              rowwise() %>%
-              mutate(across(-sum, ~ .x / sum)) %>%
-              dplyr::select(-sum) %>%
-              ungroup() %>%
-              bind_cols(true_subject = true_sub_vec)
-
-            colnames(all_preds) = c(ids, "true_subject")
-            rm(row_sums)
-
-            res = get_summarized_predictions(all_preds, rank = TRUE, exp = TRUE) %>%
-              ungroup() %>%
+              group_by(true_subject) %>%
               mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
+              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0),
                 rank1pct = (rank <= dirnum * 0.01) * 1,
                 rank5pct = (rank <= dirnum * 0.05) * 1
               ) %>%
@@ -969,7 +1138,6 @@ for (dir in dirs) {
               mutate(fold = f, n_target = dirnum) %>%
               filter(n == dirnum)
             rm(all_preds)
-            rm(dat_nzv_test)
             res
           }
         )
@@ -981,9 +1149,8 @@ for (dir in dirs) {
 
   }
 }
-
 # functional, temporal
-dirs = c("100", "500")
+dirs = c("100", "500", "1000")
 dir = dirs[1]
 for (dir in dirs) {
   dirnum = as.numeric(dir)
@@ -991,7 +1158,7 @@ for (dir in dirs) {
                        paste0("prediction_res_temporal_", paste0(dir, "fnl", ".rds")))
 
   if(!file.exists(outfile) || force) {
-    if(dirnum <= 500){
+    if(dirnum < 500){
       all_preds = list.files(here::here("data", "lily", "data", "fingerprint_res_temporal", paste0(dir, "fnl")),
                              recursive = TRUE,
                              full.names = TRUE,
@@ -1020,9 +1187,110 @@ for (dir in dirs) {
         write_rds(summary, outfile, compress = "xz")
       })
       rm(x)
-      outfile = here::here("data", "lily", "data","fingerprint_prediction_results",
-                           paste0("prediction_res_", paste0(dir, "nlfnl", ".rds")))
-      all_preds = list.files(here::here("data", "lily", "data", "fingerprint_res", paste0(dir, "nlfnl")),
+    } else {
+      x = try({
+        x = ceiling(nrow(filenames) / dirnum)
+        filenames = filenames %>%
+          mutate(fold = rep(1:x, each = dirnum)[1:nrow(filenames)])
+
+        folds = filenames %>%
+          count(fold) %>%
+          filter(n == dirnum) %>%
+          pull(fold)
+        xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells_temporal.csv.gz"))
+
+
+        summary = map_dfr(
+          .x = folds,
+          .f = function(f) {
+            ids = filenames %>% filter(fold == f) %>% pull(id) %>% as.character()
+            df =
+              xdf %>%
+              filter(id %in% ids)
+
+            test =
+              df %>%
+              filter(data == "test") %>%
+              select(-data)
+            rm(df)
+
+            files = file.path(here::here(
+              "data",
+              "lily",
+              "data",
+              "fingerprint_res_temporal",
+              paste0(dir, "fnl"),
+              paste(ids, ".rds", sep = "")
+            ))
+
+
+            true_sub_vec = test$id
+            rm(test)
+
+            all_preds =
+              map_dfr(
+                .x = files,
+                .f = function(x, exp = TRUE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
+                }
+              )
+
+            res =
+              all_preds %>%
+              group_by(true_subject) %>%
+              mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
+              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0),
+                rank1pct = (rank <= dirnum * 0.01) * 1,
+                rank5pct = (rank <= dirnum * 0.05) * 1
+              ) %>%
+              select(-rank) %>%
+              summarize(across(contains("rank"), sum), n = n()) %>%
+              mutate(fold = f, n_target = dirnum) %>%
+              filter(n == dirnum)
+            rm(all_preds)
+            res
+          }
+        )
+        write_rds(summary, outfile, compress = "xz")
+      })
+
+      rm(x)
+    }
+
+  }
+}
+
+for (dir in dirs) {
+  dirnum = as.numeric(dir)
+  outfile = here::here("data", "lily", "data","fingerprint_prediction_results",
+                       paste0("prediction_res_temporal_", paste0(dir, "nlfnl", ".rds")))
+
+  if(!file.exists(outfile) || force) {
+    if(dirnum < 500){
+      all_preds = list.files(here::here("data", "lily", "data", "fingerprint_res_temporal", paste0(dir, "nlfnl")),
                              recursive = TRUE,
                              full.names = TRUE,
                              pattern = "rds")
@@ -1032,7 +1300,7 @@ for (dir in dirs) {
                             x = readRDS(file)
 
                             fold = sub(".*fold\\_(.+)\\.rds.*", "\\1", basename(file))
-                            n_target = as.numeric(sub(".*fingerprint_res\\/(.+)nlfnl.*", "\\1", file))
+                            n_target = as.numeric(sub(".*fingerprint_res_temporal\\/(.+)nlfnl.*", "\\1", file))
 
                             res = get_summarized_predictions(x, rank = TRUE, exp = TRUE) %>%
                               ungroup() %>%
@@ -1060,7 +1328,7 @@ for (dir in dirs) {
           count(fold) %>%
           filter(n == dirnum) %>%
           pull(fold)
-        xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells.csv.gz"))
+        xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells_temporal.csv.gz"))
 
 
         summary = map_dfr(
@@ -1070,49 +1338,60 @@ for (dir in dirs) {
             df =
               xdf %>%
               filter(id %in% ids)
-
-            set.seed(123)
-            is = initial_split(df, prop = 3/4, strata = id)
-            test = testing(is)
-            rm(df); rm(is)
+            test =
+              df %>%
+              filter(data == "test") %>%
+              select(-data)
+            rm(df)
             files = file.path(here::here(
               "data",
               "lily",
               "data",
-              "fingerprint_res",
-              paste0(dir, "xgb"),
+              "fingerprint_res_temporal",
+              paste0(dir, "nlfnl"),
               paste(ids, ".rds", sep = "")
             ))
 
 
             true_sub_vec = test$id
+            rm(test)
 
             all_preds =
-              map(
+              map_dfr(
                 .x = files,
-                .f = function(x) {
-                  read_rds(x) %>% as_tibble()
+                .f = function(x, exp = TRUE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
                 }
-              ) %>%
-              bind_cols()
-            # normalize probabilities
-            row_sums = rowSums(all_preds)
+              )
 
-            # normalize and add "true subject column"
-            all_preds =
+            res =
               all_preds %>%
-              bind_cols(sum = row_sums) %>%
-              rowwise() %>%
-              mutate(across(-sum, ~ .x / sum)) %>%
-              dplyr::select(-sum) %>%
-              ungroup() %>%
-              bind_cols(true_subject = true_sub_vec)
-
-            colnames(all_preds) = c(ids, "true_subject")
-            rm(row_sums)
-            res = get_summarized_predictions(all_preds, rank = TRUE, exp = TRUE) %>%
-              ungroup() %>%
+              group_by(true_subject) %>%
               mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
+              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0),
                 rank1pct = (rank <= dirnum * 0.01) * 1,
                 rank5pct = (rank <= dirnum * 0.05) * 1
               ) %>%
@@ -1121,7 +1400,6 @@ for (dir in dirs) {
               mutate(fold = f, n_target = dirnum) %>%
               filter(n == dirnum)
             rm(all_preds)
-            rm(dat_nzv_test)
             res
           }
         )
@@ -1134,3 +1412,403 @@ for (dir in dirs) {
   }
 }
 
+## lasso
+## summarize predictions for "regular" models
+dirs = c("100", "500")
+dir = dirs[1]
+for (dir in dirs) {
+  dirnum = as.numeric(dir)
+  outfile = here::here("data", "lily", "data","fingerprint_prediction_results",
+                       paste0("prediction_res_", paste0(dir, "lasso", ".rds")))
+
+  if(!file.exists(outfile) || force) {
+    if(dirnum <= 100){
+      all_preds = list.files(here::here("data", "lily", "data", "fingerprint_res", paste0(dir, "lasso")),
+                             recursive = TRUE,
+                             full.names = TRUE,
+                             pattern = "rds")
+      x = try({
+        summary = map_dfr(.x = all_preds,
+                          .f = function(file){
+                            x = readRDS(file)
+
+                            fold = sub(".*fold\\_(.+)\\.rds.*", "\\1", basename(file))
+                            n_target = as.numeric(sub(".*fingerprint_res\\/(.+)\\lasso.*", "\\1", file))
+
+                            res = get_summarized_predictions(x, rank = TRUE) %>%
+                              mutate(rank1pct = (rank <= n_target * 0.01) * 1,
+                                     rank5pct = (rank <= n_target * 0.05) * 1) %>%
+                              select(-rank) %>%
+                              summarize(across(contains("rank"), sum),
+                                        n = n()) %>%
+                              mutate(fold = fold,
+                                     n_tar = n_target) %>%
+                              filter(n == n_tar)
+                            rm(x); rm(fold); rm(n_target)
+                            res
+                          })
+        write_rds(summary, outfile, compress = "xz")
+      })
+      rm(x)
+    } else { # in this scenario, we have one file for each model
+      x = try({
+        # figure out how many folds there were for this number of subjects
+        x = ceiling(nrow(filenames) / dirnum)
+        filenames = filenames %>%
+          mutate(fold = rep(1:x, each = dirnum)[1:nrow(filenames)])
+
+        folds = filenames %>%
+          count(fold) %>%
+          filter(n == dirnum) %>%
+          pull(fold)
+
+        # for each fold, need to read in files and put into one data frame to summarize predictions
+        summary = map_dfr(
+          .x = folds,
+          .f = function(f) {
+            ids = filenames %>% filter(fold == f) %>% pull(id) %>% as.character()
+            files = file.path(here::here(
+              "data",
+              "lily",
+              "data",
+              "fingerprint_res",
+              paste0(dir, "lasso"),
+              paste(ids, ".rds", sep = "")
+            ))
+            # figure out which test data to use
+            if(dirnum < 13367){
+              dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_test_", dir, "_", f, ".rds"))) %>%
+                mutate(id = as.character(id)) %>%
+                filter(id %in% ids) } else {
+                  dat_nzv_test = read_rds(here::here("data", "lily", "data", "dat_nzv_test.rds")) %>%
+                    mutate(id = as.character(id)) %>%
+                    filter(id %in% ids)
+                }
+
+            true_sub_vec = dat_nzv_test$id
+            rm(dat_nzv_test) # save memory
+
+            all_preds =
+              map_dfr(
+                .x = files,
+                .f = function(x, exp = FALSE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
+                }
+              )
+
+            res =
+              all_preds %>%
+              group_by(true_subject) %>%
+              mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
+              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0),
+                rank1pct = (rank <= dirnum * 0.01) * 1,
+                rank5pct = (rank <= dirnum * 0.05) * 1
+              ) %>%
+              select(-rank) %>%
+              summarize(across(contains("rank"), sum), n = n()) %>%
+              mutate(fold = f, n_target = dirnum) %>%
+              filter(n == dirnum)
+            rm(all_preds)
+            res
+          }
+        )
+        write_rds(summary, outfile, compress = "xz")
+      })
+
+      rm(x)
+    }
+
+  }
+}
+
+############## summarize predictions for temporal models
+dirs = c("100", "500")
+dir = dirs[1]
+for (dir in dirs) {
+  dirnum = as.numeric(dir)
+  outfile = here::here("data", "lily", "data","fingerprint_prediction_results",
+                       paste0("prediction_res_temporal_", paste0(dir, "lasso", ".rds")))
+
+  if(!file.exists(outfile) || force) {
+    if(dirnum <= 100){
+      all_preds = list.files(here::here("data", "lily", "data", "fingerprint_res_temporal", paste0(dir, "lasso")),
+                             recursive = TRUE,
+                             full.names = TRUE,
+                             pattern = "rds")
+      x = try({
+        summary = map_dfr(.x = all_preds,
+                          .f = function(file){
+                            x = readRDS(file)
+
+                            fold = sub(".*fold\\_(.+)\\.rds.*", "\\1", basename(file))
+                            n_target = as.numeric(sub(".*fingerprint_res_temporal\\/(.+)lasso.*", "\\1", file))
+
+                            res = get_summarized_predictions(x, rank = TRUE) %>%
+                              ungroup() %>%
+                              mutate(rank1pct = (rank <= n_target * 0.01) * 1,
+                                     rank5pct = (rank <= n_target * 0.05) * 1) %>%
+                              select(-rank) %>%
+                              summarize(across(contains("rank"), sum),
+                                        n = n()) %>%
+                              mutate(fold = fold,
+                                     n_tar = n_target) %>%
+                              filter(n == n_tar)
+                            rm(x); rm(fold); rm(n_target)
+                            res
+                          })
+        write_rds(summary, outfile, compress = "xz")
+      })
+      rm(x)
+    } else {
+      x = try({
+        x = ceiling(nrow(filenames_temp) / dirnum)
+        filenames_temp = filenames_temp %>%
+          mutate(fold = rep(1:x, each = dirnum)[1:nrow(filenames_temp)])
+
+        folds = filenames_temp %>%
+          count(fold) %>%
+          filter(n == dirnum) %>%
+          pull(fold)
+        xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells_temporal.csv.gz"))
+
+
+        summary = map_dfr(
+          .x = folds,
+          .f = function(f) {
+            ids = filenames_temp %>% filter(fold == f) %>% pull(id) %>% as.character()
+            df =
+              xdf %>%
+              filter(id %in% ids)
+
+            test =
+              df %>%
+              filter(data == "test") %>%
+              select(-data)
+            rm(df)
+
+
+            files = file.path(here::here(
+              "data",
+              "lily",
+              "data",
+              "fingerprint_res_temporal",
+              paste0(dir, "lasso"),
+              paste(ids, ".rds", sep = "")
+            ))
+
+
+            true_sub_vec = test$id
+            rm(test)
+
+            all_preds =
+              map_dfr(
+                .x = files,
+                .f = function(x, exp = FALSE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
+                }
+              )
+
+            res =
+              all_preds %>%
+              group_by(true_subject) %>%
+              mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
+              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0)
+              ) %>%
+              mutate(
+                rank1pct = (rank <= dirnum * 0.01) * 1,
+                rank5pct = (rank <= dirnum * 0.05) * 1
+              ) %>%
+              select(-rank) %>%
+              summarize(across(contains("rank"), sum), n = n()) %>%
+              mutate(fold = f, n_target = dirnum) %>%
+              filter(n == dirnum)
+            rm(all_preds)
+            res
+          }
+        )
+        write_rds(summary, outfile, compress = "xz")
+      })
+
+      rm(x)
+    }
+
+  }
+}
+
+
+# long models
+dirs = c("100", "2500", "5000", "10129")
+dir = dirs[1]
+for (dir in dirs) {
+  dirnum = as.numeric(dir)
+  outfile = here::here("data", "lily", "data","fingerprint_prediction_results",
+                       paste0("prediction_res_", paste0(dir, "long"), ".rds"))
+
+  if(!file.exists(outfile) || force) {
+    if(dirnum <= 1000){
+      all_preds = list.files(here::here("data", "lily", "data", "fingerprint_res", paste0(dir, "long")),
+                             recursive = TRUE,
+                             full.names = TRUE,
+                             pattern = "rds")
+      x = try({
+        summary = map_dfr(.x = all_preds,
+                          .f = function(file){
+                            x = readRDS(file)
+
+                            fold = sub(".*fold\\_(.+)\\.rds.*", "\\1", basename(file))
+                            n_target = as.numeric(sub(".*fingerprint_res\\/(.+)\\long.*", "\\1", file))
+
+                            res = get_summarized_predictions(x, rank = TRUE) %>%
+                              mutate(rank1pct = (rank <= n_target * 0.01) * 1,
+                                     rank5pct = (rank <= n_target * 0.05) * 1) %>%
+                              select(-rank) %>%
+                              summarize(across(contains("rank"), sum),
+                                        n = n()) %>%
+                              mutate(fold = fold,
+                                     n_tar = n_target) %>%
+                              filter(n == n_tar)
+                            rm(x); rm(fold); rm(n_target)
+                            res
+                          })
+        write_rds(summary, outfile, compress = "xz")
+      })
+      rm(x)
+    } else { # in this scenario, we have one file for each model
+      x = try({
+        # figure out how many folds there were for this number of subjects
+        x = ceiling(nrow(filenames_long) / dirnum)
+        filenames_long = filenames_long %>%
+          mutate(fold = rep(1:x, each = dirnum)[1:nrow(filenames_long)])
+
+        folds = filenames_long %>%
+          count(fold) %>%
+          filter(n == dirnum) %>%
+          pull(fold)
+
+        # for each fold, need to read in files and put into one data frame to summarize predictions
+        summary = map_dfr(
+          .x = folds,
+          .f = function(f) {
+            ids = filenames_long %>% filter(fold == f) %>% pull(id) %>% as.character()
+            files = file.path(here::here(
+              "data",
+              "lily",
+              "data",
+              "fingerprint_res",
+              paste0(dir, "long"),
+              paste(ids, ".rds", sep = "")
+            ))
+            # figure out which test data to use
+            if(dirnum < 10000){
+              dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_test_long", dir, "_", f, ".rds"))) %>%
+                mutate(id = as.character(id)) %>%
+                filter(id %in% ids) } else {
+                  dat_nzv_test = read_rds(here::here("data", "lily", "data", "dat_nzv_test_long.rds")) %>%
+                    mutate(id = as.character(id)) %>%
+                    filter(id %in% ids)
+                }
+
+            true_sub_vec = dat_nzv_test$id
+            rm(dat_nzv_test) # save memory
+
+            all_preds =
+              map_dfr(
+                .x = files,
+                .f = function(x, exp = FALSE) {
+                  id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+                  tmp = read_rds(x) %>% as_tibble() %>%
+                    mutate(true_subject = true_sub_vec) %>%
+                    magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+                    group_by(true_subject) %>%
+                    mutate(sec = row_number()) %>%
+                    pivot_longer(cols = -c("true_subject", "sec"), names_to = "name", values_to = "pred") %>%
+                    mutate(model = as.character(sub(".*x", "", name))) %>%
+                    select(-name) %>%
+                    # now we have the prediction for each second for each model / true subject combo
+                    mutate(pred = case_when(exp ~ exp(pred),
+                                            .default = pred)) %>% # exponentiate based on exp argument
+                    ungroup() %>%
+                    group_by(true_subject, model) %>%
+                    # get mean probability across seconds for each true subject / model combo
+                    summarize(mean_pred = mean(pred, na.rm = TRUE), .groups = "drop")
+                  rm(id_tmp)
+                  tmp
+                }
+              )
+
+            res =
+              all_preds %>%
+              group_by(true_subject) %>%
+              mutate(
+                rank = rank(-mean_pred)
+              ) %>% # get the rank for each prediction
+              ungroup() %>%
+              filter(model == true_subject) %>% # only keep the correct combos and get ranks
+              mutate(
+                rank1 = if_else(rank == 1, 1, 0),
+                rank5 = if_else(rank <= 5, 1, 0),
+                rank1pct = (rank <= dirnum * 0.01) * 1,
+                rank5pct = (rank <= dirnum * 0.05) * 1
+              ) %>%
+              select(-rank) %>%
+              summarize(across(contains("rank"), sum), n = n()) %>%
+              mutate(fold = f, n_target = dirnum) %>%
+              filter(n == dirnum)
+            rm(all_preds)
+            res
+          }
+        )
+        write_rds(summary, outfile, compress = "xz")
+      })
+
+      rm(x)
+    }
+
+  }
+}

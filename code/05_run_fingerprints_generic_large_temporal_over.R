@@ -4,9 +4,10 @@ source(here::here("code", "R", "utils.R"))
 fold = NULL
 rm(list = c("fold"))
 force = FALSE
-fac = c(0.1, 0.25, 0.5, 0.75, 0.9, 1.5, 10, 100)
+# fac = c(0.1, 0.25, 0.5, 0.75, 0.9)
+fac = c(0.1, 0.25)
 
-fit_model = function(subject, train, test, p) {
+fit_model = function(p, subject, train, test) {
   train$class = if_else(train$id == subject, 1, 0)
   # oversampling
   n_id = nrow(train %>% filter(class == 1))
@@ -40,16 +41,6 @@ get_input = function(default = NA_real_){
   input = as.numeric(Sys.getenv("INPUT", unset = as.character(default)))
   print(paste0("input is: ", input))
   input
-}
-
-fit_model = function(subject, train, test) {
-  train$class <- ifelse(train$id == subject, 1, 0)
-  tmp <- train %>% dplyr::select(-id)
-  tmp_test <- test %>% dplyr::select(-id)
-  mod <-
-    glm(class ~ ., data = tmp, family = binomial(link = "logit"))
-  pred <- predict.glm(mod, newdata = tmp_test, type = "response")
-  return(pred)
 }
 
 ifold = get_fold()
@@ -125,7 +116,6 @@ for(f in folds$fold){
               train = dat_nzv,
               test = dat_nzv_test)
 
-        write_rds(preds, outfile, compress = "xz")
         write_rds(preds, outfile, compress = "xz")
         rm(preds)
       })

@@ -37,7 +37,8 @@ if(!file.exists(here::here("data", "lily", "data", "nzv_fine.rds"))){
   rm(df)
 }
 
-df_nzv_summ = read_rds(here::here("data", "lily", "data", "nzv_fine.rds"))
+df_nzv_summ = read_rds(here::here("data", "lily", "data", "nzv_fine.rds")) %>%
+  mutate(id = as.character(id))
 
 age_sex_res = read_rds(here::here("data", "lily", "data", "covar_reg_fine.rds"))
 
@@ -62,7 +63,8 @@ a_max =
   df_nzv_summ %>%
   select(id, var = all_of(age_max)) %>%
   summarize(min_id = sample(id[var == min(var)], 1),
-            max_id = sample(id[var == max(var)], 1))
+            max_id = sample(id[var == max(var)], 1)) %>%
+  mutate(varname = age_max)
 
 a_max
 
@@ -77,8 +79,10 @@ age_min =
 a_min =
   df_nzv_summ %>%
   select(id, var = all_of(age_min)) %>%
-  summarize(min_id = first(id[var == min(var)]),
-            max_id = first(id[var == max(var)]))
+  summarize(min_id = sample(id[var == min(var)], 1),
+            max_id = sample(id[var == max(var)], 1)) %>%
+  mutate(varname = age_min)
+
 a_min
 
 sex_max =
@@ -92,8 +96,9 @@ sex_max =
 s_max =
   df_nzv_summ %>%
   select(id, var = all_of(sex_max)) %>%
-  summarize(min_id = first(id[var == min(var)]),
-            max_id = first(id[var == max(var)]))
+  summarize(min_id = sample(id[var == min(var)], 1),
+            max_id = sample(id[var == max(var)], 1)) %>%
+  mutate(varname = sex_max)
 
 s_max
 
@@ -108,8 +113,9 @@ sex_min =
 s_min =
   df_nzv_summ %>%
   select(id, var = all_of(sex_min)) %>%
-  summarize(min_id = first(id[var == min(var)]),
-            max_id = first(id[var == max(var)]))
+  summarize(min_id = sample(id[var == min(var)], 1),
+            max_id = sample(id[var == max(var)], 1)) %>%
+  mutate(varname = sex_min)
 s_min
 
 mort_max =
@@ -122,8 +128,9 @@ mort_max =
 m_max =
   df_nzv_summ %>%
   select(id, var = all_of(mort_max)) %>%
-  summarize(min_id = first(id[var == min(var)]),
-            max_id = first(id[var == max(var)]))
+  summarize(min_id = sample(id[var == min(var)], 1),
+            max_id = sample(id[var == max(var)], 1)) %>%
+  mutate(varname = mort_max)
 
 m_max
 
@@ -137,50 +144,51 @@ mort_min =
 m_min =
   df_nzv_summ %>%
   select(id, var = all_of(mort_min)) %>%
-  summarize(min_id = first(id[var == min(var)]),
-            max_id = first(id[var == max(var)]))
+  summarize(min_id = sample(id[var == min(var)], 1),
+            max_id = sample(id[var == max(var)], 1)) %>%
+  mutate(varname = mort_min)
 m_min
 
-#####
-> m_min
-# A tibble: 1 × 2
-min_id max_id
-<dbl>  <int>
-  1  70026  25254
 
-> m_max
-# A tibble: 1 × 2
-min_id max_id
-<int>  <int>
-  1  25622  21582
+file = here::here("data", "lily", "data", "adept_walking_dfs", "pax_g", "62336.csv.gz")
 
-> s_min
-# A tibble: 1 × 2
-min_id max_id
-<int>  <int>
-  1  75903  39628
+filex = read_csv(file)
 
-> s_max
-# A tibble: 1 × 2
-min_id max_id
-<dbl>  <int>
-  1  83595  24302
+df =
+  s_min %>% mutate(var = "sex_min") %>%
+  bind_rows(s_max %>% mutate(var = "sex_max")) %>%
+  bind_rows(m_min %>% mutate(var = "mort_min")) %>%
+  bind_rows(m_max %>% mutate(var = "mort_max")) %>%
+  bind_rows(a_min %>% mutate(var = "age_min")) %>%
+  bind_rows(a_max %>% mutate(var = "age_max")) %>%
+  pivot_longer(cols = contains("id"),
+               names_to = "name",
+               values_to = "id")
 
-> a_min
-# A tibble: 1 × 2
-min_id max_id
-<dbl>  <int>
-  1  76568  46745
+covars = readRDS(here::here("data", "lily", "data", "covar_data_accel_subset.rds"))
 
-m_min
-# A tibble: 1 × 2
-min_id max_id
-<int>  <int>
-  1  61434  19394
+i = 1
+result = list()
+for(i in 1:nrow(df)){
+  idf = df[i,]
+  cyc = covars %>% filter(SEQN == as.numeric(idf$id)) %>% pull(data_release_cycle)
+  cyc_char = if_else(cyc == 7, "pax_g", "pax_h")
+  fpath = file.path(here::here("data", "lily",
+                               "data", "adept_walking_dfs",
+                               cyc_char,
+                               paste0(idf$id, ".csv.gz")))
+  x = read_csv(fpath) %>%
+    mutate(wave = cyc_char,
+           var = idf$var,
+           varname = idf$varname,
+           name = idf$name,
+           id = idf$id) %>%
+    select(id, wave, var, name, everything())
+  result[[i]] = x
+  rm(x)
+}
 
-
-file = here::here("data", "lily", "data", "adept_walking_dfs", "pax_y", "61434.csv.gz")
-
-x =read_csv(file)
-
+res_final = bind_rows(result)
+write_rds(res_final, here::here("data", "lily", "data", "sample_reg_subjects.rds"),
+          compress = "xz")
 

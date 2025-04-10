@@ -4,7 +4,8 @@ source(here::here("code", "R", "utils.R"))
 fold = NULL
 rm(list = c("fold"))
 force = FALSE
-fac = c(0.1, 0.25, 0.5, 0.75, 0.9, 1.5, 10, 100)
+fac = c(0.1, 0.25, 0.5, 0.75, 0.9)
+fac = c(0.1, 0.25)
 
 # each one takes about 10 min and 20G (30 to be safe)
 # 1024 gb per user = 34 jobs at once
@@ -17,7 +18,7 @@ get_input = function(default = NA_real_){
 }
 
 
-fit_model = function(subject, train, test, p) {
+fit_model = function(p, subject, train, test) {
   train$class = if_else(train$id == subject, 1, 0)
   # oversampling
   n_id = nrow(train %>% filter(class == 1))
