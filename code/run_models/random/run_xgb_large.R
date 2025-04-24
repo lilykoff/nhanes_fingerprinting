@@ -130,7 +130,7 @@ for(f in folds$fold){
     dat_nzv_test = read_rds(here::here("data", "lily", "data", "dat_nzv_test.rds")) %>%
       mutate(id = as.character(id)) %>%
       filter(id %in% ids_all)
-  } else if (size  > 1000) {
+  } else if (size  > 100) {
     dat_nzv = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_train_", size, "_", f, ".rds"))) %>%
       mutate(id = as.character(id)) %>%
       filter(id %in% ids_all)
