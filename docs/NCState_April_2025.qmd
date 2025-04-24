@@ -21,10 +21,19 @@ author: "Lily Koffman"
 date: "April 10 2025"
 ---
 
+# Follow along
+
+![](figs/qr.png) 
+
+[https://shorturl.at/FdHXC](https://shorturl.at/FdHXC)
+
+
+
 # Introduction 
 
 ::: {layout-ncol=2}
 ![](figs/headshot_new.jpeg){width=50%}
+
 
 ::: {.nonincremental}
 + 4th year PhD candidate in biostatistics at Johns Hopkins 
@@ -1864,7 +1873,7 @@ Next step: image on scalar regression
 
 ::: {.nonincremental}
 
-+ Github: [github.com/lilykoff](github.com/lilykoff)
++ [github.com/lilykoff](github.com/lilykoff); [lilykoff.com](lilykoff.com)
 + JHU collaborators: [Ciprian Crainiceanu](http://www.ciprianstats.org/), [John Muschelli](https://publichealth.jhu.edu/faculty/2438/john-muschelli), [Yan Zhang](https://www.linkedin.com/in/yanwendyzhang/), Wearable and Implantable Technology (WIT) research group 
 + External collaborators: [Andrew Leroux (Colorado School of Public Health)]([https://coloradosph.cuanschutz.edu/resources/directory/directory-profile/Leroux-Andrew-UCD6003212586), [Jaroslaw Harezlak (Indiana University School of Public Health)](https://publichealth.indiana.edu/about/directory/Jaroslaw-Harezlak-harezlak.html)
 
