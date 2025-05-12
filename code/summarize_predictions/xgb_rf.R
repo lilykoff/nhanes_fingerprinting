@@ -38,9 +38,8 @@ get_summarized_predictions_full(
   pred_dir = here::here("data", "lily", "data", "fingerprint_res", "500xgb"),
   force = TRUE,
   n_max = 13367,
-  no_nzv_dat = TRUE,
-  testdata_name = "all_grid_cells.csv.gz"
-)
+  testdata_name = "dat_nzv_test_500",
+  no_nzv_dat = FALSE)
 
 
 # temporal

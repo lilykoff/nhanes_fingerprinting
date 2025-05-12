@@ -17,30 +17,14 @@ if (!dir.exists(here::here("data", "lily", "data", "fingerprint_prediction_resul
   ))
 }
 
-dirnums = c(100)
-outfiles = paste("prediction_res_", dirnums, "long.rds", sep = "")
+dirnums = 10129
+outfiles = paste("prediction_res_", dirnums, "longsubset.rds", sep = "")
 pred_dirs = paste(
   here::here("data", "lily", "data", "fingerprint_res"),
-  paste0(dirnums, "long"),
+  paste0(dirnums, "longsubset"),
   sep = "/"
 )
-
-purrr::pwalk(.l = list(outfile = outfiles,
-                       dirnum = dirnums,
-                       pred_dir = pred_dirs),
-             .f = get_summarized_predictions_full,
-             filenames_file = "fingerprint_folds_long.rds",
-             individual = FALSE,
-             exp = FALSE)
-
-dirnums = c(2500, 5000, 10129)
-outfiles = paste("prediction_res_", dirnums, "long.rds", sep = "")
-pred_dirs = paste(
-  here::here("data", "lily", "data", "fingerprint_res"),
-  paste0(dirnums, "long"),
-  sep = "/"
-)
-testdata_names = c(paste("dat_nzv_test_long", dirnums[1:2], sep = ""), "dat_nzv_test_long")
+testdata_names = "dat_nzv_test"
 
 
 purrr::pwalk(.l = list(outfile = outfiles,

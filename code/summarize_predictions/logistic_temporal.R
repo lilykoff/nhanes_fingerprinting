@@ -42,7 +42,7 @@ pred_dirs = paste(
   dirnums,
   sep = "/"
 )
-testdata_names = paste("dat_nzv_test_temporal2_", dirnums, sep = "_")
+testdata_names = c(paste("dat_nzv_test_temporal2_", dirnums[1:2], sep = "_"), "dat_nzv_test_temporal2")
 
 purrr::pwalk(.l = list(outfile = outfiles,
                        dirnum = dirnums,
@@ -51,6 +51,27 @@ purrr::pwalk(.l = list(outfile = outfiles,
              .f = get_summarized_predictions_full,
              filenames_file = "fingerprint_folds_temporal2.rds",
              individual = TRUE,
+             no_nzv_dat = FALSE,
+             exp = FALSE,
+             n_max = 10770)
+
+dirnums = c(10770)
+outfiles = paste("prediction_res_temporal2_", paste0(dirnums, "wtd"), ".rds", sep = "")
+pred_dirs = paste(
+  here::here("data", "lily", "data", "fingerprint_res_temporal2"),
+  paste0(dirnums, "wtd"),
+  sep = "/"
+)
+testdata_names = "dat_nzv_test_temporal2"
+
+purrr::pwalk(.l = list(outfile = outfiles,
+                       dirnum = dirnums,
+                       pred_dir = pred_dirs,
+                       testdata_name = testdata_names),
+             .f = get_summarized_predictions_full,
+             filenames_file = "fingerprint_folds_temporal2.rds",
+             individual = TRUE,
+             no_nzv_dat = FALSE,
              exp = FALSE,
              n_max = 10770)
 

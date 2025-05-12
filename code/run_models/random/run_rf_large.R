@@ -110,71 +110,72 @@ for(f in folds$fold){
     ids = filenames %>%
       filter(fold == f & fold2 == ifold) %>% pull(id)
   }
+  if(length(ids) > 0) {
+    ids_all =
+      filenames %>%
+      filter(fold == f) %>%
+      pull(id) %>%
+      as.character()
 
-  ids_all =
-    filenames %>%
-    filter(fold == f) %>%
-    pull(id) %>%
-    as.character()
+    if(size == 13367){
+      dat_nzv = read_rds(here::here("data", "lily", "data", "dat_nzv_train.rds")) %>%
+        mutate(id = as.character(id)) %>%
+        filter(id %in% ids_all)
+      dat_nzv_test = read_rds(here::here("data", "lily", "data", "dat_nzv_test.rds")) %>%
+        mutate(id = as.character(id)) %>%
+        filter(id %in% ids_all)
+    } else if (size  > 100) {
+      dat_nzv = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_train_", size, "_", f, ".rds"))) %>%
+        mutate(id = as.character(id)) %>%
+        filter(id %in% ids_all)
+      dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_test_", size, "_", f, ".rds"))) %>%
+        mutate(id = as.character(id)) %>%
+        filter(id %in% ids_all)
+    } else{
+      xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells.csv.gz"))
+      # xdf = readr::read_csv(here::here("data", "lily", "data", "sample_grid_cells.csv.gz"))
+      df =
+        xdf %>%
+        filter(id %in% ids_all)
 
-  if(size == 13367){
-    dat_nzv = read_rds(here::here("data", "lily", "data", "dat_nzv_train.rds")) %>%
-      mutate(id = as.character(id)) %>%
-      filter(id %in% ids_all)
-    dat_nzv_test = read_rds(here::here("data", "lily", "data", "dat_nzv_test.rds")) %>%
-      mutate(id = as.character(id)) %>%
-      filter(id %in% ids_all)
-  } else if (size  > 100) {
-    dat_nzv = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_train_", size, "_", f, ".rds"))) %>%
-      mutate(id = as.character(id)) %>%
-      filter(id %in% ids_all)
-    dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_test_", size, "_", f, ".rds"))) %>%
-      mutate(id = as.character(id)) %>%
-      filter(id %in% ids_all)
-  } else{
-    xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells.csv.gz"))
-    # xdf = readr::read_csv(here::here("data", "lily", "data", "sample_grid_cells.csv.gz"))
-    df =
-      xdf %>%
-      filter(id %in% ids_all)
+      set.seed(123)
+      is = initial_split(df, prop = 3/4, strata = id)
+      test = testing(is)
+      train = training(is)
 
-    set.seed(123)
-    is = initial_split(df, prop = 3/4, strata = id)
-    test = testing(is)
-    train = training(is)
+      nzv_trans =
+        recipe(id ~ ., data = train) %>%
+        step_nzv(all_predictors())
 
-    nzv_trans =
-      recipe(id ~ ., data = train) %>%
-      step_nzv(all_predictors())
+      nzv_estimates = prep(nzv_trans)
 
-    nzv_estimates = prep(nzv_trans)
-
-    nzv = colnames(juice(nzv_estimates))
-    dat_nzv = train %>% dplyr::select(id, all_of(nzv))
-    dat_nzv_test = test %>% dplyr::select(id, all_of(nzv))
-    rm(train); rm(test); rm(df); rm(xdf)
-  }
-
-  for(id in ids){
-    print(paste0("id = ", id, " num = ", i, " fold = ", f))
-    i = i + 1
-    outfile = here::here("data", "lily", "data", "fingerprint_res", paste0(size, "rf"), paste0(id, ".rds"))
-    dir = dirname(outfile)
-    if(!dir.exists(dir)){
-      dir.create(dir, recursive = TRUE)
+      nzv = colnames(juice(nzv_estimates))
+      dat_nzv = train %>% dplyr::select(id, all_of(nzv))
+      dat_nzv_test = test %>% dplyr::select(id, all_of(nzv))
+      rm(train); rm(test); rm(df); rm(xdf)
     }
 
-    if(!file.exists(outfile) | force){
-      x = try({
-        preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test)
+    for(id in ids){
+      print(paste0("id = ", id, " num = ", i, " fold = ", f))
+      i = i + 1
+      outfile = here::here("data", "lily", "data", "fingerprint_res", paste0(size, "rf"), paste0(id, ".rds"))
+      dir = dirname(outfile)
+      if(!dir.exists(dir)){
+        dir.create(dir, recursive = TRUE)
+      }
 
-        write_rds(preds, outfile, compress = "xz")
-        rm(preds)
-      })
-      rm(x)
+      if(!file.exists(outfile) | force){
+        x = try({
+          preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test)
+
+          write_rds(preds, outfile, compress = "xz")
+          rm(preds)
+        })
+        rm(x)
+      }
+
+
     }
-
-
   }
 }
 

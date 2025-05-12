@@ -55,6 +55,32 @@ for(f in folds$fold){
     ids = filenames %>%
       filter(fold == f & fold2 == ifold) %>% pull(id)
   }
+
+  if(length(ids) > 0) {
+    ids_all =
+    filenames %>%
+    filter(fold == f) %>%
+    pull(id) %>%
+    as.character()
+
+  if(size == 10129){
+    dat_nzv = read_rds(here::here("data", "lily", "data", "dat_nzv_train_long.rds")) %>%
+      mutate(id = as.character(id)) %>%
+      filter(id %in% ids_all)
+    dat_nzv_test = read_rds(here::here("data", "lily", "data", "dat_nzv_test_long.rds")) %>%
+      mutate(id = as.character(id)) %>%
+      filter(id %in% ids_all)
+  } else {
+    dat_nzv = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_train_long", size, "_", f, ".rds"))) %>%
+      mutate(id = as.character(id)) %>%
+      filter(id %in% ids_all)
+    dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_test_long", size, "_", f, ".rds"))) %>%
+      mutate(id = as.character(id)) %>%
+      filter(id %in% ids_all)
+  }
+
+
+
   for(id in ids){
     print(paste0("id = ", id, " num = ", i, " fold = ", f))
     i = i + 1
@@ -66,30 +92,6 @@ for(f in folds$fold){
 
     if(!file.exists(outfile) | force){
       x = try({
-
-        ids_all =
-          filenames %>%
-          filter(fold == f) %>%
-          pull(id) %>%
-          as.character()
-
-        if(size == 10129){
-          dat_nzv = read_rds(here::here("data", "lily", "data", "dat_nzv_train_long.rds")) %>%
-            mutate(id = as.character(id)) %>%
-            filter(id %in% ids_all)
-          dat_nzv_test = read_rds(here::here("data", "lily", "data", "dat_nzv_test_long.rds")) %>%
-            mutate(id = as.character(id)) %>%
-            filter(id %in% ids_all)
-        } else {
-          dat_nzv = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_train_long", size, "_", f, ".rds"))) %>%
-            mutate(id = as.character(id)) %>%
-            filter(id %in% ids_all)
-          dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_test_long", size, "_", f, ".rds"))) %>%
-            mutate(id = as.character(id)) %>%
-            filter(id %in% ids_all)
-        }
-
-
         preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test) %>% janitor::clean_names()
 
         write_rds(preds, outfile, compress = "xz")
@@ -99,6 +101,7 @@ for(f in folds$fold){
     }
 
 
+  }
   }
 }
 

@@ -4,7 +4,7 @@ source(here::here("code", "R", "utils.R"))
 fold = NULL
 rm(list = c("fold"))
 force = FALSE
-fac = c(0.1, 0.25, 0.5, 0.75, 0.9)
+# fac = c(0.1, 0.25, 0.5, 0.75, 0.9)
 fac = c(0.1, 0.25)
 
 # each one takes about 10 min and 20G (30 to be safe)
@@ -74,6 +74,8 @@ for(f in folds$fold){
     ids = filenames %>%
       filter(fold == f & fold2 == ifold) %>% pull(id)
   }
+  if(length(ids) > 0){
+
   ids_all =
     filenames %>%
     filter(fold == f) %>%
@@ -121,7 +123,7 @@ for(f in folds$fold){
       rm(x)
     }
 
-
+}
   }
 }
 

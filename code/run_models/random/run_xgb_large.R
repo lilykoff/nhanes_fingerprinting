@@ -117,6 +117,8 @@ for(f in folds$fold){
     ids = filenames %>%
       filter(fold == f & fold2 == ifold) %>% pull(id)
   }
+  if(length(ids) > 0){
+
   ids_all =
     filenames %>%
     filter(fold == f) %>%
@@ -182,6 +184,7 @@ for(f in folds$fold){
     }
 
 
+  }
   }
 }
 

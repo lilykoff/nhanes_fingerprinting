@@ -27,6 +27,7 @@ fit_model = function(subject, train, test) {
   full_data = bind_rows(train, test)  # Combine the datasets
   full_data = full_data %>%
     mutate(label = factor(if_else(id == subject, 1, 0)))
+
   train_indices = 1:nrow(train)           # Indices for the training set
   test_indices = (nrow(train) + 1):nrow(full_data)
   # Manually create the initial_split object
@@ -36,18 +37,18 @@ fit_model = function(subject, train, test) {
   )
   train = training(initialsplit)
 
-  nzv_trans =
-    recipe(id ~ ., data = train) %>%
-    step_nzv(all_predictors())
-
-  nzv_estimates = prep(nzv_trans)
-
-  nzv = colnames(juice(nzv_estimates))
-  train = train %>% dplyr::select(label, id, all_of(nzv))
+  # nzv_trans =
+  #   recipe(id ~ ., data = train) %>%
+  #   step_nzv(all_predictors())
+  #
+  # nzv_estimates = prep(nzv_trans)
+  #
+  # nzv = colnames(juice(nzv_estimates))
+  # train = train %>% dplyr::select(label, id, all_of(nzv))
 
   cv_folds = train %>%
     rsample::vfold_cv(v = 5, strata = id)
-
+  # cv_folds = train %>%  rsample::vfold_cv(v = 5)
   rf_grid = grid_space_filling(
     finalize(mtry(), train),
     min_n(),
@@ -113,6 +114,7 @@ for(f in folds$fold){
     ids = filenames %>%
       filter(fold == f & fold2 == ifold) %>% pull(id)
   }
+  if(length(ids) > 0){
   ids_all =
     filenames %>%
     filter(fold == f) %>%
@@ -184,6 +186,7 @@ for(f in folds$fold){
     }
 
 
+  }
   }
 }
 

@@ -19,7 +19,7 @@ fit_model = function(subject, train, test) {
   tmp <- train %>% dplyr::select(-id)
   tmp_test <- test %>% dplyr::select(-id)
   mod <-
-    glm(class ~ ., data = tmp, family = binomial(link = "logit"))
+    glm(class ~ ., data = tmp, weights = wts, family = binomial(link = "logit"))
   pred <- predict.glm(mod, newdata = tmp_test, type = "response")
   return(pred)
 }
@@ -55,6 +55,9 @@ for(f in folds$fold){
     ids = filenames %>%
       filter(fold == f & fold2 == ifold) %>% pull(id)
   }
+
+  if(length(ids) > 0) {
+
 
   ids_all =
     filenames %>%
@@ -99,6 +102,7 @@ for(f in folds$fold){
     }
 
 
+  }
   }
 }
 

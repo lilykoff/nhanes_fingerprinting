@@ -35,13 +35,13 @@ purrr::pwalk(.l = list(outfile = outfiles,
              exp = FALSE)
 
 dirnums = c(2500, 5000, 8018)
-outfiles = paste("prediction_res_temporal2", dirnums, "long.rds", sep = "")
+outfiles = paste("prediction_res_temporal_", dirnums, "long.rds", sep = "")
 pred_dirs = paste(
-  here::here("data", "lily", "data", "fingerprint_res"),
+  here::here("data", "lily", "data", "fingerprint_res_temporal2"),
   paste0(dirnums, "long"),
   sep = "/"
 )
-testdata_names = paste("dat_nzv_test_long_temporal", dirnums, sep = "")
+testdata_names = c(paste("dat_nzv_test_long_temporal_", dirnums[1:2], sep = ""), "dat_nzv_test_long_temporal")
 
 
 purrr::pwalk(.l = list(outfile = outfiles,
