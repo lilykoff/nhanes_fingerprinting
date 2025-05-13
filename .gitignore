@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Ignore Quarto _cache and _files folders recursively
+**/*_cache/
+**/*_files/
+
+# Optionally ignore Quarto publishing files (if you don’t want them in git)
+.quarto/
+.quarto.pub/
