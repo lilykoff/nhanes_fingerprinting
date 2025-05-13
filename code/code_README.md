@@ -51,3 +51,13 @@ Rest of files follow similar format with `run` and `run_large`, but for models o
 
 ## summarize predictions
 Files to summarize the results of the models. For each script, result is file in `data/lily/data/fingerprint_prediction_results` with format: `prediction_res_<temporal>_<sample size><model type>_.rds`. Relies on `summary_fns.R` file. 
+
+## manuscript
+Code to generate figures and tables for manuscript 
+
+Other: 
++ `pipeline.sh`: bash code to run scripts on JHPCE cluster 
++ `get_walking_dists.R`: code to get distribution of walking bouts across population
++ `summary_fns.R`: helper functions for summarize redictions files 
+
+`
