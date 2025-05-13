@@ -114,7 +114,7 @@ for (dir in dirs) {
 }
 
 get_missing(size = 500, name = "xgb", individual = TRUE, temporal = FALSE)
-
+get_missing(size = 500, name = "xgb", individual = TRUE, temporal = TRUE)
 ## xgboost, temporal
 for (dir in dirs) {
   files = list.files(here::here("data", "lily", "data", "fingerprint_res_temporal2", paste0(dir, "xgb")), recursive = TRUE)
@@ -144,6 +144,8 @@ for (dir in dirs) {
 
 get_missing(size = 500, name = "rf", individual = TRUE, temporal = FALSE)
 get_missing(size = 500, name = "rf", individual = TRUE, temporal = TRUE)
+get_missing(size = 500, name = "xgb", individual = TRUE, temporal = FALSE)
+get_missing(size = 500, name = "xgb", individual = TRUE, temporal = TRUE)
 
 
 ## rf, temporal
@@ -246,6 +248,8 @@ for (dir in dirs) {
                  as.numeric(dir)*floor(13367/as.numeric(dir))))
   }
 }
+
+get_missing(size = 13367, name = "over", individual = TRUE, temporal = FALSE)
 dirs = c("100", "500", "1000", "10770")
 for (dir in dirs) {
   files = list.files(here::here("data", "lily", "data", "fingerprint_res_temporal2", paste0(dir, "over")), recursive = TRUE)
@@ -284,6 +288,8 @@ for (dir in dirs) {
                  as.numeric(dir)*floor(8018/as.numeric(dir))))
   }
 }
+
+
 get_missing_long = function(name, size, individual = FALSE){
   results_path = here::here("data", "lily", "data", "fingerprint_res", paste0(size, name))
   fname_path = here::here("data", "lily", "data", "fingerprint_folds_long.rds")
@@ -337,6 +343,11 @@ get_missing_long = function(name, size, individual = FALSE){
 
 }
 
+
+# weighted
+get_missing(size = 13367, name = "wtd", individual = TRUE, temporal = FALSE)
+
+get_missing(size = 10770, name = "wtd", individual = TRUE, temporal = TRUE)
 
 # train not test - not used
 dirs = c("100","250", "500", "1000", "2500", "5000", "10000", "13367")

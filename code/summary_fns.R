@@ -63,7 +63,7 @@ get_summarized_predictions_full = function(exp = FALSE,
                                            testdata_name = NULL,
                                            n_max = NULL,
                                            force = FALSE,
-                                           no_nzv_dat = NULL) {
+                                           no_nzv_dat = FALSE){
   x = try({
     out = here::here("data", "lily", "data", "fingerprint_prediction_results", outfile)
     print(out)
@@ -118,24 +118,23 @@ get_summarized_predictions_full = function(exp = FALSE,
               pred_dir,
               paste(ids, ".rds", sep = "")
             ))
-            if (no_nzv_dat) {
-              xdf = read_csv(here::here("data", "lily", "data", paste0(testdata_name)))
-              df =
-                xdf %>%
-                mutate(id = as.character(id)) %>%
-                filter(id %in% ids)
-              rm(xdf)
-              set.seed(123)
-              is = initial_split(df, prop = 3 / 4, strata = id)
-              dat_nzv_test = testing(is)
-              rm(df)
-              rm(is)
-
-            } else if (dirnum < n_max) {
+            if (dirnum < n_max & !no_nzv_dat) {
               dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0(testdata_name, "_", f, ".rds"))) %>%
                 mutate(id = as.character(id)) %>%
                 filter(id %in% ids)
-            } else {
+            } else if (no_nzv_dat) {
+                xdf = read_csv(here::here("data", "lily", "data", paste0(testdata_name)))
+                df =
+                  xdf %>%
+                  mutate(id = as.character(id)) %>%
+                  filter(id %in% ids)
+                rm(xdf)
+                set.seed(123)
+                is = initial_split(df, prop = 3 / 4, strata = id)
+                dat_nzv_test = testing(is)
+                rm(df)
+                rm(is)
+              } else {
                 dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0(testdata_name, ".rds"))) %>%
                   mutate(id = as.character(id)) %>%
                   filter(id %in% ids)
@@ -147,7 +146,7 @@ get_summarized_predictions_full = function(exp = FALSE,
             all_preds =
               map_dfr(
                 .x = files,
-                .f = function(x, exp = FALSE) {
+                .f = function(x) {
                   id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
                   tmp = read_rds(x) %>% as_tibble() %>%
                     mutate(true_subject = true_sub_vec) %>%

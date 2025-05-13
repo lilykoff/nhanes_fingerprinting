@@ -1,5 +1,4 @@
 # investigate boutsof walking
-# try fitting regression models on one fold (70 people)
 
 library(tidyverse)
 library(purrr)
