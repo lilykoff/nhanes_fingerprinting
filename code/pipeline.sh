@@ -144,8 +144,6 @@ Rnosave sofr.R -J SUMM_SOFR --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofile
 Rnosave xgb_rf.R -J SUMM_ML --mem=40G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave long_temporal_subset.R -J SUMM_LONG_TS --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
-Rnosave xgb_temp.R -J SUMM_XGBT --dependency=afterok:16721658 --mem=30G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave rf_temp.R -J SUMM_RF --dependency=afterok:16833628 --mem=30G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 ## boosting
 
