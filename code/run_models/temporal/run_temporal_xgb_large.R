@@ -2,6 +2,7 @@ library(tidyverse)
 library(tidymodels)
 source(here::here("code", "R", "utils.R"))
 fold = NULL
+n_cores = parallel::detectCores() - 1
 rm(list = c("fold"))
 force = FALSE
 # each one takes about 10 min and 20G (30 to be safe)
@@ -24,7 +25,7 @@ xgb_spec = boost_tree(
   mtry = tune(),
   ## randomness
   learn_rate = tune()) %>%                           ## step size)
-  set_engine("xgboost") %>%
+  set_engine("xgboost", nthread = 1) %>%
   set_mode("classification")
 
 
@@ -67,7 +68,7 @@ fit_model = function(subject, train, test) {
     xgb_wf,
     resamples = cv_folds,
     grid = xgb_grid,
-    control = control_grid(save_pred = FALSE)
+    control = control_grid(save_pred = FALSE, parallel_over = "everything")
   )
 
   best_acc = select_best(xgb_res, metric = "roc_auc")

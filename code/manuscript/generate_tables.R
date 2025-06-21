@@ -83,6 +83,7 @@ all_100 =
   ) %>%
   filter(paradigm != "temporal")
 
+## RF RUN FROM HERE
 
 res_500 = c(list.files(here::here("results"), pattern = "*.\\_500.rds"),
             list.files(here::here("results"), pattern = "*.\\_500fnl.rds"),
@@ -91,6 +92,21 @@ res_500 = c(list.files(here::here("results"), pattern = "*.\\_500.rds"),
             list.files(here::here("results"), pattern = "*.\\_500xgb.rds"),
             list.files(here::here("results"), pattern = "*.\\_500rf.rds"))
 
+
+temp = read_rds(here::here("results", "prediction_res_500rf.rds"))
+
+temp %>%
+  mutate(r1 = rank1 / n * 100) %>%
+  summarize(r = median(r1))
+
+temp = read_rds(here::here("results", "prediction_res_100rf.rds"))
+temp %>%
+  mutate(r1 = rank1 / n * 100) %>%
+  summarize(r = median(r1))
+
+temp %>%
+  mutate(r1 = rank1 / n * 100) %>%
+  summarize(r = median(r1))
 all_500 =
   map_dfr(res_500,
           .f = function(x){
@@ -115,6 +131,7 @@ all_500 =
     )
   ) %>%
   filter(paradigm != "temporal")
+
 all_100 %>%
   select(contains("pct"), type, paradigm) %>%
   group_by(type, paradigm) %>%
@@ -122,6 +139,7 @@ all_100 %>%
   pivot_wider(names_from = paradigm, values_from = contains("pct"))
 
 all_500 %>%
+  mutate(across(contains("rank"), ~(.x / n)*100)) %>%
   select(contains("pct"), type, paradigm) %>%
   group_by(type, paradigm) %>%
   summarize(across(contains("pct"), median), .groups = "drop") %>%
@@ -142,6 +160,8 @@ all_100 %>%
   pivot_wider(names_from = n, values_from = c(r1, r5)) %>%
   kableExtra::kbl("latex", booktabs = TRUE)
 
+
+## RF RUN THIS
 all_100 %>%
   bind_rows(all_500 %>% mutate(fold = as.character(fold))) %>%
   mutate(across(contains("rank"), ~(.x / n)*100)) %>%
@@ -327,20 +347,25 @@ default = all_logistic %>%
   mutate(factor = 1 / n,
          factor = "default")
 
-result_ov %>%
+result_ov = read_rds(here::here("data", "all_fprint_res_ov.rds"))
+
+
+res_over %>%
   filter(factor < 1) %>%
   mutate(factor = as.character(factor)) %>%
-  mutate(temporal = if_else(grepl("temporal", name), "Temporal", "Random")) %>%
-  bind_rows(def) %>%
-  filter(n_sub %in% c(100, 500, 1000)) %>%
+  mutate(temporal = if_else(grepl("temporal", paradigm), "Temporal", "Random")) %>%
+  bind_rows(default) %>%
+  filter(n %in% c(100, 500, 1000)) %>%
   # pivot_longer(cols = c(rank1_median, rank5_median), names_to = "metric", values_to = "value") %>%
   mutate(ovsamp = factor(factor)) %>%
-  select(ovsamp, n_sub, rank1_median, rank5_median, temporal) %>%
-  pivot_wider(names_from = n_sub, values_from = c(rank1_median, rank5_median)) %>%
-  group_by(temporal) %>%
-  arrange(temporal) %>%
-  select(temporal, ovsamp, rank1_median_100, rank1_median_500, rank1_median_1000,
-         rank5_median_100, rank5_median_500, rank5_median_1000) %>%
+  select(ovsamp, n, contains("rank"), paradigm) %>%
+  mutate(across(contains("rank"), ~sprintf("%.2g", signif(.x, 2)))) %>%
+  pivot_wider(names_from = n, values_from = contains("rank"),
+               id_cols = c(ovsamp, paradigm)) %>%
+  group_by(paradigm) %>%
+  arrange(paradigm) %>%
+  select(paradigm, ovsamp, rank1_100, rank1_500, rank1_1000,
+         rank5_100, rank5_500, rank5_1000) %>%
   kableExtra::kbl("latex", booktabs = TRUE)
 
 
@@ -396,6 +421,8 @@ all_wt %>%
 two_stage = read_rds(here::here("results", "prediction_res_13367boost.rds"))
 two_stage
 
+two_stage2 = read_rds(here::here("results", "prediction_res_temporal_10770boost.rds"))
+two_stage2
 # bouts
 
 bouts = read_csv(here::here("data", "walking_segments.csv.gz"))

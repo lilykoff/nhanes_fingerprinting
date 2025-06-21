@@ -36,7 +36,7 @@ get_summarized_predictions_full(
   dirnum = 500,
   filenames_file = "fingerprint_folds.rds",
   pred_dir = here::here("data", "lily", "data", "fingerprint_res", "500xgb"),
-  force = TRUE,
+  force = FALSE,
   n_max = 13367,
   testdata_name = "dat_nzv_test_500",
   no_nzv_dat = FALSE)
@@ -59,10 +59,10 @@ get_summarized_predictions_full(
   dirnum = 500,
   filenames_file = "fingerprint_folds_temporal2.rds",
   pred_dir = here::here("data", "lily", "data", "fingerprint_res_temporal2", "500xgb"),
-  force = TRUE,
+  force = FALSE,
   n_max = 13367,
-  no_nzv_dat = TRUE,
-  testdata_name = "all_grid_cells_temporal2.csv.gz"
+  testdata_name = "dat_nzv_test_temporal2_500",
+  no_nzv_dat = FALSE
 )
 
 
@@ -75,18 +75,6 @@ get_summarized_predictions_full(
   pred_dir = here::here("data", "lily", "data", "fingerprint_res", "100rf")
 )
 
-get_summarized_predictions_full(
-  exp = FALSE,
-  individual = TRUE,
-  outfile = "prediction_res_500rf.rds",
-  dirnum = 500,
-  filenames_file = "fingerprint_folds.rds",
-  pred_dir = here::here("data", "lily", "data", "fingerprint_res", "500rf"),
-  force = TRUE,
-  n_max = 13367,
-  no_nzv_dat = TRUE,
-  testdata_name = "all_grid_cells.csv.gz"
-)
 
 
 # temporal
@@ -102,13 +90,25 @@ get_summarized_predictions_full(
 get_summarized_predictions_full(
   exp = FALSE,
   individual = TRUE,
+  outfile = "prediction_res_500rf.rds",
+  dirnum = 500,
+  filenames_file = "fingerprint_folds.rds",
+  pred_dir = here::here("data", "lily", "data", "fingerprint_res", "500rf"),
+  force = TRUE,
+  n_max = 13367,
+  testdata_name = "dat_nzv_test_500",
+  no_nzv_dat = FALSE
+)
+
+get_summarized_predictions_full(
+  exp = FALSE,
+  individual = TRUE,
   outfile = "prediction_res_temporal2_500rf.rds",
   dirnum = 500,
   filenames_file = "fingerprint_folds_temporal2.rds",
   pred_dir = here::here("data", "lily", "data", "fingerprint_res_temporal2", "500rf"),
   force = TRUE,
-  n_max = 13367,
-  no_nzv_dat = TRUE,
-  testdata_name = "all_grid_cells_temporal2.csv.gz"
+  n_max = 10770,
+  testdata_name = "dat_nzv_test_temporal2_500",
+  no_nzv_dat = FALSE
 )
-

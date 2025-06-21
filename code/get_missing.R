@@ -127,7 +127,6 @@ for (dir in dirs) {
   }
 }
 
-get_missing(size = 500, name = "xgb", individual = TRUE, temporal = TRUE)
 
 ## rf
 dirs = c("100", "500")
@@ -146,6 +145,24 @@ get_missing(size = 500, name = "rf", individual = TRUE, temporal = FALSE)
 get_missing(size = 500, name = "rf", individual = TRUE, temporal = TRUE)
 get_missing(size = 500, name = "xgb", individual = TRUE, temporal = FALSE)
 get_missing(size = 500, name = "xgb", individual = TRUE, temporal = TRUE)
+
+length(list.files(here::here("data", "lily", "data",
+                              "fingerprint_res", "500rf"),
+                  recursive = TRUE)) / 13000
+
+
+length(list.files(here::here("data", "lily", "data",
+                             "fingerprint_res_temporal2", "500xgb"),
+                  recursive = TRUE)) / 10500
+
+length(list.files(here::here("data", "lily", "data",
+                             "fingerprint_res_temporal2", "500rf"),
+                  recursive = TRUE)) / 10500
+
+length(list.files(here::here("data", "lily", "data",
+                             "fingerprint_res", "500xgb"),
+                  recursive = TRUE))
+
 
 
 ## rf, temporal

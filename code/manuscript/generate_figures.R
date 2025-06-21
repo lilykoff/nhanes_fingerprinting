@@ -89,7 +89,8 @@ p1 = all_100 %>%
   mutate(metric = factor(metric, labels = c("Rank 1", "Rank 5"))) %>%
   filter(paradigm == "Random") %>%
   ggplot(aes(x = type, y = value, color = type)) +
-  geom_boxplot(outlier.size = .5, outlier.alpha = .5) +
+  geom_boxplot() +
+  geom_jitter(width = .25, alpha = .5, size = .4) +
   scale_color_manual(values = c("#000000FF", "#009292FF", "#DB6D00FF", "#006DDBFF", "#B66DFFFF", "#920000FF"), name = "Model") +
   # geom_point(position = position_jitterdodge(), alpha = .2, size = .2) +
   facet_grid(metric~n) +
@@ -114,7 +115,8 @@ p2 = all_100 %>%
   mutate(metric = factor(metric, labels = c("Rank 1", "Rank 5"))) %>%
   filter(paradigm == "Temporal") %>%
   ggplot(aes(x = type, y = value, color = type)) +
-  geom_boxplot(outlier.size = .5, outlier.alpha = .5) +
+  geom_boxplot() +
+  geom_jitter(width = .25, alpha = .5, size = .4) +
   scale_color_manual(values = c("#000000FF", "#009292FF", "#DB6D00FF", "#006DDBFF", "#B66DFFFF", "#920000FF"), name = "Model") +
   # geom_point(position = position_jitterdodge(), alpha = .2, size = .2) +
   facet_grid(metric~n) +
@@ -128,10 +130,10 @@ p2 = all_100 %>%
   guides(color = guide_legend(nrow = 2)) +
   scale_x_discrete(labels =c("Logistic", "Lasso", "XGBoost", "RF", "nlSoFR", "lSoFR"))
 
-
-png(here::here("manuscript", "figs_final", "acc100_500.png"), width = 8, height = 5.3,
+### here for RF
+png(here::here("manuscript", "figs_final", "acc100_500.png"), width = 8, height = 7, # 5.3
     units = "in",
-    res = 500)
+    res = 350)
 # print(p)
 p1 / p2  + plot_layout(axes = "collect")
 # plot_annotation(tag_levels = "A")
@@ -215,7 +217,7 @@ p = all_logistic %>%
                      labels = c("Rank 1", "Rank 1%", "Rank 5", "Rank 5%"), name = "Metric")
 
 
-png(here::here("manuscript", "figs_final", "acc_pct.png"), width = 6, height = 4, res = 500, units = "in")
+png(here::here("manuscript", "figs_final", "acc_pct.png"), width = 6, height = 4, res = 350, units = "in")
 p
 dev.off()
 
@@ -275,14 +277,20 @@ p = all_long %>%
   theme(legend.position = c(.8, .7))
 
 png(here::here("manuscript", "figs_final", "long_acc.png"), width = 8, height = 4, units = "in",
-    res = 400)
+    res = 350)
 p
 dev.off()
 ## oversampling
 ov_files = list.files(here::here("results"), pattern = "over", full.names = TRUE)
 
-small = ov_files[c(2, 3, 5, 10, 11, 14)]
+small = ov_files[c(2, 3, 5, 9, 10, 13)]
 
+small = c(here::here("results", "prediction_res_100over.rds"),
+          here::here("results", "prediction_res_500over.rds"),
+          here::here("results", "prediction_res_1000over.rds"),
+          here::here("results", "prediction_res_temporal2_100over.rds"),
+          here::here("results", "prediction_res_temporal2_500over.rds"),
+          here::here("results", "prediction_res_temporal2_1000over.rds"))
 res_over = map_dfr(small, .f = \(x) read_rds(x) %>% mutate(name = x)) %>%
   ungroup() %>%
   mutate(paradigm = if_else(grepl("temporal", name), "temporal", "random"),
@@ -329,7 +337,7 @@ png(
   width = 6,
   height = 4,
   units = "in",
-  res = 500
+  res = 350
 )
 # print(p)
 p
@@ -493,7 +501,7 @@ p3 = day2 %>%
   labs(x = "Time of day", y = "Acceleration (g)") +
   theme(panel.grid = element_blank())
 png(here::here("manuscript", "figs_final", "figure1_3panel.png"), width = 6, height = 8, units = "in",
-    res = 250)
+    res = 150)
 p1 / p2 / p3 + plot_annotation(tag_levels = "A")
 dev.off()
 
@@ -637,7 +645,7 @@ p2 = one_sec %>%
   geom_vline(data = tibble(x = seq(0.25, 2.75, 0.25)), aes(xintercept = x), col = "darkgrey") +
   geom_hline(data = tibble(y = seq(0.25, 2.75, 0.25)), aes(yintercept = y), col = "darkgrey")
 
-png(here::here("manuscript", "figs_final", "p2_v2.png"), width = 6, height = 2.5, units = "in", res = 500)
+png(here::here("manuscript", "figs_final", "p2_v2.png"), width = 6, height = 2.5, units = "in", res = 350)
 p2
 dev.off()
 
@@ -673,7 +681,7 @@ p3 = plot_df %>%
   # axis.text.x = element_text(angle = 45, vjust = .5)) +
   labs(x = "Acceleration range (g)", y = "Lag acceleration range (g)")
 
-png(here::here("manuscript", "figs_final", "p3_v2.png"), width = 6, height = 2.5, units = "in", res = 500)
+png(here::here("manuscript", "figs_final", "p3_v2.png"), width = 6, height = 2.5, units = "in", res = 350)
 p3
 dev.off()
 
@@ -950,7 +958,7 @@ p2 = p + facet_grid(lag ~ id) +
 
 p_final = p1 + p2 + plot_layout(widths = c(1, 6), axes = "collect")
 png(here::here("manuscript", "figs_final", "fingerprint_predictions.png"), width = 10, height = 6, units = "in",
-    res = 500)
+    res = 350)
 p1 + p2 + plot_layout(widths = c(1, 6), axes = "collect")
 dev.off()
 
@@ -965,7 +973,6 @@ get_density <- function(x, y, ...) {
   return(dens$z[ii])
 }
 
-ids = unique(sample_dat$id)
 
 
 
@@ -1089,7 +1096,7 @@ p4 = sample_dat2 %>%
 library(patchwork)
 p_2 = (p4 + p3) + plot_annotation(title = "Subject 2")
 png(here::here("manuscript", "figs_final", "fingerprint_data.png"), width = 10, height = 8, units = "in",
-    res = 500)
+    res = 350)
 p_1 / p_2 + plot_annotation(tag_levels = "A")
 dev.off()
 

@@ -1,11 +1,18 @@
 library(tidyverse)
 library(tidymodels)
 library(rsample)
+packages <- c("furrr", "future")
+install.packages(setdiff(packages, rownames(installed.packages())))
+library(future)
+library(furrr)
+
 source(here::here("code", "R", "utils.R"))
 fold = NULL
 rm(list = c("fold"))
 force = FALSE
-n_cores = parallel::detectCores() - 1
+n_cores = parallel::detectCores()
+n_cores_inner = floor(n_cores / 2)
+n_cores_outer = 2
 # each one takes about 10 min and 20G (30 to be safe)
 # 1024 gb per user = 34 jobs at once
 # 13367 total = 92 days / 34 = ~ 3 days
@@ -15,7 +22,7 @@ rf_spec = rand_forest(
   min_n = tune(),
   trees = 1000
 ) %>%
-  set_engine("ranger") %>%
+  set_engine("ranger", num.threads = 1) %>%
   set_mode("classification")
 
 get_input = function(default = NA_real_){
@@ -56,13 +63,13 @@ fit_model = function(subject, train, test) {
                   predictors = starts_with("x")) %>%
     add_model(rf_spec)
 
-  doParallel::registerDoParallel(cores = n_cores)
+  doParallel::registerDoParallel(cores = n_cores_inner)
   set.seed(234)
   rf_res = tune_grid(
     rf_wf,
     resamples = cv_folds,
     grid = rf_grid,
-    control = control_grid(save_pred = FALSE)
+    control = control_grid(save_pred = FALSE, parallel_over = "everything")
   )
 
   best_acc = select_best(rf_res, metric = "roc_auc")
@@ -80,9 +87,10 @@ fit_model = function(subject, train, test) {
 
 
 ifold = get_fold()
+# ifold = 487
 size = get_input()
+size = 500
 filenames = readRDS(here::here("data", "lily", "data", "fingerprint_folds.rds"))
-
 
 
 if (!is.na(size)) {
@@ -91,7 +99,7 @@ if (!is.na(size)) {
     mutate(fold = rep(1:x, each = size)[1:nrow(filenames)])
 }
 
-
+#
 fsize = ceiling(nrow(filenames)/1000)
 x = ceiling(nrow(filenames)/fsize)
 filenames = filenames %>%
@@ -103,7 +111,6 @@ folds = filenames %>%
   count(fold) %>%
   filter(n == size)
 
-# f = folds$fold[1]
 for(f in folds$fold){
   i = 1
   if (!is.na(ifold)) {
@@ -155,27 +162,39 @@ for(f in folds$fold){
       rm(train); rm(test); rm(df); rm(xdf)
     }
 
-    for(id in ids){
-      print(paste0("id = ", id, " num = ", i, " fold = ", f))
-      i = i + 1
+    options(parallelly.availableCores.methods = "custom", parallelly.availableCores.custom = n_cores)
+    plan(multisession, workers = n_cores_outer)
+
+    process_id = function(id) {
+      print(paste0("id = ", id))
       outfile = here::here("data", "lily", "data", "fingerprint_res", paste0(size, "rf"), paste0(id, ".rds"))
       dir = dirname(outfile)
-      if(!dir.exists(dir)){
-        dir.create(dir, recursive = TRUE)
-      }
-
-      if(!file.exists(outfile) | force){
+      if(file.exists(outfile)){
+        out = read_rds(outfile)
+        if(length(out) != nrow(dat_nzv_test)){
+          x = try({
+            preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test)
+            write_rds(preds, outfile, compress = "xz")
+            rm(preds)
+          })
+          rm(x)
+        }
+        rm(out)
+      } else if(!file.exists(outfile) | force) {
         x = try({
           preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test)
-
           write_rds(preds, outfile, compress = "xz")
           rm(preds)
         })
         rm(x)
       }
-
-
     }
+
+    # instead of for(id in ids)
+    future_map(ids, process_id, .options = furrr_options(seed = TRUE), .progress = TRUE)
+    plan(sequential)
   }
 }
+
+
 
