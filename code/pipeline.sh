@@ -1,6 +1,9 @@
 # get the fingerprints (walking)
 Rnosave 00_get_fingerprints.R -J FINGERPRINTNEW --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
+Rnosave 00_get_fingerprints_sc.R -J FINGERPRINTSC --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+
+
 # get the grid cell predictors - regular, fine, and temporal
 Rnosave 01_get_grid_cell_predictors.R -J GCPREDS --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave 01_get_grid_cell_predictors_fine.R -J GCPREDS_FINE --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
