@@ -10,7 +10,7 @@ source(here::here("code", "R", "utils.R"))
 fold = NULL
 rm(list = c("fold"))
 force = FALSE
-n_cores = parallel::detectCores()
+n_cores = parallelly::availableCores()
 n_cores_inner = floor(n_cores / 2)
 n_cores_outer = 2
 # each one takes about 10 min and 20G (30 to be safe)
@@ -89,7 +89,7 @@ fit_model = function(subject, train, test) {
 ifold = get_fold()
 # ifold = 487
 size = get_input()
-size = 500
+# size = 500
 filenames = readRDS(here::here("data", "lily", "data", "fingerprint_folds.rds"))
 
 
@@ -100,7 +100,7 @@ if (!is.na(size)) {
 }
 
 #
-fsize = ceiling(nrow(filenames)/1000)
+fsize = ceiling(nrow(filenames)/size)
 x = ceiling(nrow(filenames)/fsize)
 filenames = filenames %>%
   mutate(fold2 = rep(1:x, each = fsize)[1:nrow(filenames)])
@@ -138,7 +138,7 @@ for(f in folds$fold){
       dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0("dat_nzv_test_", size, "_", f, ".rds"))) %>%
         mutate(id = as.character(id)) %>%
         filter(id %in% ids_all)
-    } else{
+    } else {
       xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells.csv.gz"))
       # xdf = readr::read_csv(here::here("data", "lily", "data", "sample_grid_cells.csv.gz"))
       df =
@@ -166,7 +166,6 @@ for(f in folds$fold){
     plan(multisession, workers = n_cores_outer)
 
     process_id = function(id) {
-      print(paste0("id = ", id))
       outfile = here::here("data", "lily", "data", "fingerprint_res", paste0(size, "rf"), paste0(id, ".rds"))
       dir = dirname(outfile)
       if(file.exists(outfile)){
@@ -175,15 +174,17 @@ for(f in folds$fold){
           x = try({
             preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test)
             write_rds(preds, outfile, compress = "xz")
+            print(paste0("id = ", id))
             rm(preds)
           })
           rm(x)
         }
         rm(out)
-      } else if(!file.exists(outfile) | force) {
+      } else if(!file.exists(outfile) || force) {
         x = try({
           preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test)
           write_rds(preds, outfile, compress = "xz")
+          print(paste0("id = ", id))
           rm(preds)
         })
         rm(x)

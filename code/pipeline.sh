@@ -13,6 +13,11 @@ Rnosave 01_get_grid_cell_predictors_long_temporal.R -J GCPREDS_LONG_TEMP --mem=1
 Rnosave 01_get_grid_cell_predictors_temporal2.R -J GCPREDS_TEMP2 --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
 
+Rnosave 01_get_grid_cell_predictors_sc.R -J GCPREDS_SC --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave 01_get_grid_cell_predictors_temporal_sc.R -J GCPREDS_TEMPSC --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave 01_get_grid_cell_predictors_sc_small.R -J GCPREDS_SMALL --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+
+
 # process the predictors to make one file w/ all predictors
 Rnosave 02_process_predictors_fine.R -J PROCPREDFINE --mem=70G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 Rnosave 02_process_predictors_temporal.R -J PROCPREDTEMP --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
@@ -21,12 +26,16 @@ Rnosave 02_process_predictors_long.R -J PROCPREDLONG --mem=70G -o eofiles/%x_%A.
 Rnosave 02_process_predictors_temporal2.R -J PROCPREDTEMP --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 Rnosave 02_process_predictors_long_temporal.R -J PROCPREDL --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 
+Rnosave 02_process_predictors_sc.R -J PROCPRED_SC --mem=120G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
+Rnosave 02_process_predictors_temporal_sc.R -J PROCPRED_SCT --mem=120G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
+Rnosave 02_process_predictors_sc_small.R -J PROCPRED_SCS --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 
 # make train/test data and folds
 Rnosave 03_make_folds.R -J MAKEFOLDS --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave 03_make_data_allmodels.R -J MAKEDAT --mem=20G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 
+Rnosave 03_make_data_sc.R -J MDAT --mem=200G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 # regress on covariates (outcome is grid cell, predictor is covariate)
 Rnosave 04_regress_on_covars.R -J REGRESSF3 --mem=120G --cpus-per-task=8 --ntasks=1 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
@@ -43,6 +52,9 @@ Rnosave run_large.R -J FP5000 --export=INPUT=5000 --mem=30G --array=1-1000 --tim
 Rnosave run_large.R -J FP10000 --export=INPUT=10000 --mem=40G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_large.R -J FPALL --export=INPUT=13367 --mem=50G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
+Rnosave run_large_scs.R -J FPALL --export=INPUT=13367 --mem=25G --array=1-200%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+
+
 Rnosave run_large_weighted.R -J FPWT --export=INPUT=13367 --mem=15G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
 
@@ -57,6 +69,8 @@ Rnosave run_xgb_large.R -J XGB500 --export=INPUT=500 --mem=50G --array=1-1000 --
 # rf
 Rnosave run_rf.R -J RF100 --export=INPUT=100 --mem=50G --array=1-133 --cpus-per-task=8 --ntasks=1 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave run_rf_large.R -J RF500 --export=INPUT=500 --mem=50G --array=1-1000 --cpus-per-task=8 --ntasks=1 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+
+Rnosave run_rf_large.R -J RF1000 --export=INPUT=1000 --mem=75G --array=1 --cpus-per-task=8 --ntasks=1 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 
 # sofr
@@ -90,6 +104,10 @@ Rnosave run_temporal_large.R -J FP2500T --export=INPUT=2500 --mem=30G --array=1-
 Rnosave run_temporal_large.R -J FP5000T --export=INPUT=5000 --mem=30G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_temporal_large.R -J FP10000T --export=INPUT=10770 --mem=40G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
+Rnosave run_temporal_sc.R -J FP100T_SC --export=INPUT=100 --mem=30G --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_sc.R -J FP100_SC --export=INPUT=100 --mem=15G --qos=shared-400-4 --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_temporal_sc_large.R -J FPLARGET --export=INPUT=15374 --mem=40G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_sc_large.R -J FPLARGE --export=INPUT=15374 --mem=40G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
 # lasso
 Rnosave run_temporal_lasso.R -J LASSO100T --export=INPUT=100 --mem=30G --array=1-107 --cpus-per-task=8 --ntasks=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
@@ -156,3 +174,7 @@ Rnosave get_all_preds_10770.R -J GET_PREDS_TEMP --mem=5G --array=1-200 -o eofile
 Rnosave run_boosted_model.R -J RUN_BOOSTED --mem=10G --array=1-200 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave run_temporal_boosted_model.R -J RUN_BOOSTED_TEMP --mem=10G --array=1-200 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
+## misc
+
+Rnosave get_walking_dists_sc.R -J WALKDIST --mem=10G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave get_subj_level_preds.R -J SPREDS --mem=20G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
