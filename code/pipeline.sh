@@ -50,9 +50,6 @@ Rnosave run.R -J FP1000 --export=INPUT=1000 --mem=100G --array=1-13 --time=3-00 
 Rnosave run_large.R -J FP2500 --export=INPUT=2500 --mem=30G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_large.R -J FP5000 --export=INPUT=5000 --mem=30G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_large.R -J FP10000 --export=INPUT=10000 --mem=40G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-Rnosave run_large.R -J FPALL --export=INPUT=13367 --mem=50G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-
-Rnosave run_large_scs.R -J FPALL --export=INPUT=13367 --mem=25G --array=1-200%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
 
 Rnosave run_large_weighted.R -J FPWT --export=INPUT=13367 --mem=15G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
@@ -69,8 +66,6 @@ Rnosave run_xgb_large.R -J XGB500 --export=INPUT=500 --mem=50G --array=1-1000 --
 # rf
 Rnosave run_rf.R -J RF100 --export=INPUT=100 --mem=50G --array=1-133 --cpus-per-task=8 --ntasks=1 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave run_rf_large.R -J RF500 --export=INPUT=500 --mem=50G --array=1-1000 --cpus-per-task=8 --ntasks=1 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-
-Rnosave run_rf_large.R -J RF1000 --export=INPUT=1000 --mem=75G --array=1 --cpus-per-task=8 --ntasks=1 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 
 # sofr
@@ -103,11 +98,6 @@ Rnosave run_temporal.R -J FP1000T --export=INPUT=1000 --mem=100G --array=1-10 --
 Rnosave run_temporal_large.R -J FP2500T --export=INPUT=2500 --mem=30G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_temporal_large.R -J FP5000T --export=INPUT=5000 --mem=30G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_temporal_large.R -J FP10000T --export=INPUT=10770 --mem=40G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-
-Rnosave run_temporal_sc.R -J FP100T_SC --export=INPUT=100 --mem=30G --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-Rnosave run_sc.R -J FP100_SC --export=INPUT=100 --mem=15G --qos=shared-400-4 --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-Rnosave run_temporal_sc_large.R -J FPLARGET --export=INPUT=15374 --mem=40G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-Rnosave run_sc_large.R -J FPLARGE --export=INPUT=15374 --mem=40G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
 # lasso
 Rnosave run_temporal_lasso.R -J LASSO100T --export=INPUT=100 --mem=30G --array=1-107 --cpus-per-task=8 --ntasks=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
@@ -164,7 +154,7 @@ Rnosave oversample_temporal.R -J SUMM_OV_T --mem=50G --time=3-00 -o eofiles/%x_%
 Rnosave sofr.R -J SUMM_SOFR --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave xgb_rf.R -J SUMM_ML --mem=40G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave long_temporal_subset.R -J SUMM_LONG_TS --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-
+Rnosave summarize_sc.R -J SUMMSC --mem=20G --time=3-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
 
 ## boosting
 
@@ -178,3 +168,23 @@ Rnosave run_temporal_boosted_model.R -J RUN_BOOSTED_TEMP --mem=10G --array=1-200
 
 Rnosave get_walking_dists_sc.R -J WALKDIST --mem=10G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave get_subj_level_preds.R -J SPREDS --mem=20G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+
+### REVISION
+
+# random forest for sample size of 1000
+Rnosave run_rf_large.R -J RF1000 --export=INPUT=1000 --mem=35G --array=1-1000 --cpus-per-task=8 --ntasks=1 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+
+# stepcount with full dataset, temporal and random
+Rnosave run_temporal_sc_large.R -J FPLARGET --export=INPUT=15374 --mem=40G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_sc_large.R -J FPLARGE --export=INPUT=15374 --mem=40G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+
+# stepcount with small dataset
+# random and random, weighted
+Rnosave run_large_scs.R -J FPALL --export=INPUT=13367 --mem=25G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+Rnosave run_large_weighted_scs.R -J FPALLW --export=INPUT=13367 --mem=25G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+
+# stepcount with n = 100
+Rnosave run_temporal_sc.R -J FP100T_SC --export=INPUT=100 --mem=30G --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_sc.R -J FP100_SC --export=INPUT=100 --mem=15G --qos=shared-400-4 --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+
+
