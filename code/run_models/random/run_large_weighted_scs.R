@@ -70,6 +70,12 @@ for(f in folds$fold){
       pull(id) %>%
       as.character()
 
+    outfiles =
+      here::here("data", "lily", "data", "fingerprint_res_scs", paste0(size, "wtd"), paste0(ids, ".rds"))
+
+    if(!all(file.exists(outfiles)) || force) {
+
+
     if(size == 13367){
       dat_nzv = read_rds(here::here("data", "lily", "data", "dat_nzv_train_scs.rds")) %>%
         mutate(id = as.character(id)) %>%
@@ -106,7 +112,7 @@ for(f in folds$fold){
         rm(x)
       }
 
-
+    }
     }
   }
 }

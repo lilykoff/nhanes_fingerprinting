@@ -61,11 +61,12 @@ get_summarized_predictions_full = function(exp = FALSE,
                                            filenames_file,
                                            individual = FALSE,
                                            testdata_name = NULL,
+                                           out_dir = here::here("data", "lily", "data", "fingerprint_prediction_results"),
                                            n_max = NULL,
                                            force = FALSE,
                                            no_nzv_dat = FALSE){
   x = try({
-    out = here::here("data", "lily", "data", "fingerprint_prediction_results", outfile)
+    out = here::here(out_dir, outfile)
     print(out)
     if (!file.exists(out) || force) {
       filenames = read_rds(here::here("data", "lily", "data", filenames_file))

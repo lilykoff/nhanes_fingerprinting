@@ -17,6 +17,7 @@ Rnosave 01_get_grid_cell_predictors_sc.R -J GCPREDS_SC --mem=15G --array=1-200 -
 Rnosave 01_get_grid_cell_predictors_temporal_sc.R -J GCPREDS_TEMPSC --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave 01_get_grid_cell_predictors_sc_small.R -J GCPREDS_SMALL --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
+Rnosave 01_get_grid_cell_predictors_temporal_sc_small.R -J GCPREDS_T_SMALL --mem=15G --array=1-200 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
 # process the predictors to make one file w/ all predictors
 Rnosave 02_process_predictors_fine.R -J PROCPREDFINE --mem=70G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
@@ -29,6 +30,7 @@ Rnosave 02_process_predictors_long_temporal.R -J PROCPREDL --mem=50G -o eofiles/
 Rnosave 02_process_predictors_sc.R -J PROCPRED_SC --mem=120G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 Rnosave 02_process_predictors_temporal_sc.R -J PROCPRED_SCT --mem=120G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 Rnosave 02_process_predictors_sc_small.R -J PROCPRED_SCS --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
+Rnosave 02_process_predictors_temporal_sc_small.R -J PROCPRED_T_SCS --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 
 # make train/test data and folds
 Rnosave 03_make_folds.R -J MAKEFOLDS --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
@@ -36,6 +38,8 @@ Rnosave 03_make_data_allmodels.R -J MAKEDAT --mem=20G -o eofiles/%x_%A.out -e eo
 
 
 Rnosave 03_make_data_sc.R -J MDAT --mem=200G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+
+
 # regress on covariates (outcome is grid cell, predictor is covariate)
 Rnosave 04_regress_on_covars.R -J REGRESSF3 --mem=120G --cpus-per-task=8 --ntasks=1 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
@@ -175,16 +179,27 @@ Rnosave get_subj_level_preds.R -J SPREDS --mem=20G -o eofiles/%x_%A.out -e eofil
 Rnosave run_rf_large.R -J RF1000 --export=INPUT=1000 --mem=35G --array=1-1000 --cpus-per-task=8 --ntasks=1 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 # stepcount with full dataset, temporal and random
-Rnosave run_temporal_sc_large.R -J FPLARGET --export=INPUT=15374 --mem=40G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-Rnosave run_sc_large.R -J FPLARGE --export=INPUT=15374 --mem=40G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_temporal_sc_large.R -J FPLARGET --export=INPUT=15374 --mem=70G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_sc_large.R -J FPLARGE --export=INPUT=15374 --mem=55G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+# need to run: weighted for both
+Rnosave run_temporal_sc_large_weighted.R -J FPLARGET_WT --export=INPUT=15374 --mem=100G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+Rnosave run_sc_large_weighted.R -J FPLARGE_WT --export=INPUT=15374 --mem=100G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
 # stepcount with small dataset
 # random and random, weighted
-Rnosave run_large_scs.R -J FPALL --export=INPUT=13367 --mem=25G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
-Rnosave run_large_weighted_scs.R -J FPALLW --export=INPUT=13367 --mem=25G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+Rnosave run_large_scs.R -J FPALL --export=INPUT=13367 --mem=25G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+Rnosave run_large_weighted_scs.R -J FPALLW --export=INPUT=13367 --mem=25G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+# need to run: temporal, temporal weighted (this requires making the data first)
+Rnosave run_large_temporal_scs.R -J FPALL_T --export=INPUT=10770 --mem=25G --array=1-1000%50 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave run_large_weighted_temporal_scs.R -J FPALLW_T --export=INPUT=10770 --mem=25G --array=1-1000%50 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+
 
 # stepcount with n = 100
 Rnosave run_temporal_sc.R -J FP100T_SC --export=INPUT=100 --mem=30G --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_sc.R -J FP100_SC --export=INPUT=100 --mem=15G --qos=shared-400-4 --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
+## need to run
+get_oom 25874308
+get_oom 25875892
 
+sacct -j 25888588_1
