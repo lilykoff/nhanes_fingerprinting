@@ -30,7 +30,7 @@ fit_model = function(subject, train, test, weighted = FALSE) {
       family = binomial())
   }
 
-  preds = plogis(Xt %*% coef(mod) %>% as.vector)
+  preds = plogis(as.numeric(Xt %*% coef(mod)))
   rm(mod)
   return(preds)
 }

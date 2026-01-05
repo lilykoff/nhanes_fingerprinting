@@ -179,27 +179,34 @@ Rnosave get_subj_level_preds.R -J SPREDS --mem=20G -o eofiles/%x_%A.out -e eofil
 Rnosave run_rf_large.R -J RF1000 --export=INPUT=1000 --mem=35G --array=1-1000 --cpus-per-task=8 --ntasks=1 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 # stepcount with full dataset, temporal and random
-Rnosave run_temporal_sc_large.R -J FPLARGET --export=INPUT=15374 --mem=70G --array=1-1000%10 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-Rnosave run_sc_large.R -J FPLARGE --export=INPUT=15374 --mem=55G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-# need to run: weighted for both
-Rnosave run_temporal_sc_large_weighted.R -J FPLARGET_WT --export=INPUT=15374 --mem=100G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
-Rnosave run_sc_large_weighted.R -J FPLARGE_WT --export=INPUT=15374 --mem=100G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+# running: temporal
+Rnosave run_temporal_sc_large.R -J FPLARGET --export=INPUT=15374 --mem=100G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
+# need to run
+Rnosave run_sc_large.R -J FPLARGE --export=INPUT=15374 --mem=150G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+# running temporal weighted
+Rnosave run_temporal_sc_large_weighted.R -J WT_FPLARGET --export=INPUT=15374 --mem=150G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+# need to run
+Rnosave run_sc_large_weighted.R -J WT_FPLARGE --export=INPUT=15374 --mem=150G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
 # stepcount with small dataset
 # random and random, weighted
 Rnosave run_large_scs.R -J FPALL --export=INPUT=13367 --mem=25G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 Rnosave run_large_weighted_scs.R -J FPALLW --export=INPUT=13367 --mem=25G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
-# need to run: temporal, temporal weighted (this requires making the data first)
+# temporal and temporal, weighted (done)
 Rnosave run_large_temporal_scs.R -J FPALL_T --export=INPUT=10770 --mem=25G --array=1-1000%50 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave run_large_weighted_temporal_scs.R -J FPALLW_T --export=INPUT=10770 --mem=25G --array=1-1000%50 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 
-# stepcount with n = 100
+# stepcount with n = 100 (done)
 Rnosave run_temporal_sc.R -J FP100T_SC --export=INPUT=100 --mem=30G --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_sc.R -J FP100_SC --export=INPUT=100 --mem=15G --qos=shared-400-4 --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
 ## need to run
-get_oom 25874308
-get_oom 25875892
 
-sacct -j 25888588_1
+Rnosave summarize_sc_temp.R -J SUMMSC_TEMP --mem=50G --time=3-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
+Rnosave summarize_rf_1000.R -J SUMMRF --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4 --dependency=afterok:25874276
+
+Rnosave sct_1.R -J SMS1 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
+Rnosave sct_2.R -J SMS2 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
+Rnosave sct_3.R -J SMS3 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
+Rnosave sct_4.R -J SMS4 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4

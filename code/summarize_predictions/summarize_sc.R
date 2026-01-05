@@ -202,3 +202,51 @@ purrr::pwalk(.l = list(outfile = outfiles,
              exp = FALSE,
              n_max = 13367,
              no_nzv_dat = FALSE)
+
+# temporal
+dirnums = c(10770)
+
+outfiles = paste("prediction_res_temporal_scs_", dirnums, ".rds", sep = "")
+
+pred_dirs = paste(
+  here::here("data", "lily", "data", "fingerprint_res_temporal_scs"),
+  dirnums,
+  sep = "/"
+)
+
+testdata_names = "dat_nzv_test_temporal_scs"
+purrr::pwalk(.l = list(outfile = outfiles,
+                       dirnum = dirnums,
+                       pred_dir = pred_dirs,
+                       testdata_name = testdata_names),
+             .f = get_summarized_predictions_full,
+             filenames_file = "fingerprint_folds_temporal2.rds",
+             individual = TRUE,
+             out_dir = here::here("data", "lily", "data", "fingerprint_prediction_results_sc"),
+             exp = FALSE,
+             n_max = 10770,
+             no_nzv_dat = FALSE)
+
+# stepcount with 3 min of data, random, wtd
+
+
+outfiles = paste("prediction_res_temporal_scs_", paste0(dirnums, "wtd"), ".rds", sep = "")
+
+pred_dirs = paste(
+  here::here("data", "lily", "data", "fingerprint_res_temporal_scs"),
+  paste0(dirnums, "wtd"),
+  sep = "/"
+)
+
+testdata_names = "dat_nzv_test_temporal_scs"
+purrr::pwalk(.l = list(outfile = outfiles,
+                       dirnum = dirnums,
+                       pred_dir = pred_dirs,
+                       testdata_name = testdata_names),
+             .f = get_summarized_predictions_full,
+             filenames_file = "fingerprint_folds_temporal2.rds",
+             individual = TRUE,
+             out_dir = here::here("data", "lily", "data", "fingerprint_prediction_results_sc"),
+             exp = FALSE,
+             n_max = 10770,
+             no_nzv_dat = FALSE)

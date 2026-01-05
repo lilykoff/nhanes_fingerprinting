@@ -77,9 +77,9 @@ for(f in folds$fold){
         dir.create(dir, recursive = TRUE)
       }
 
-      if(!file.exists(outfile) | force){
+      if(!file.exists(outfile) || force){
         x = try({
-          preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test) %>% janitor::clean_names()
+          preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test)
 
           write_rds(preds, outfile, compress = "xz")
           rm(preds)

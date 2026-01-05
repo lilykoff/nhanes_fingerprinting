@@ -187,8 +187,8 @@ get_summarized_predictions_full = function(exp = FALSE,
               ) %>%
               select(-rank) %>%
               summarize(across(contains("rank"), sum), n = n()) %>%
-              mutate(fold = f, n_target = dirnum) %>%
-              filter(n == dirnum)
+              mutate(fold = f, n_target = dirnum)
+              # filter(n == dirnum)
             rm(all_preds)
             res
           }

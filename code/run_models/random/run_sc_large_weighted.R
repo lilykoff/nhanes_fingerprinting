@@ -79,7 +79,7 @@ for(f in folds$fold){
 
       if(!file.exists(outfile) | force){
         x = try({
-          preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test, weighted = TRUE) %>% janitor::clean_names()
+          preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test, weighted = TRUE)
 
           write_rds(preds, outfile, compress = "xz")
           rm(preds)
