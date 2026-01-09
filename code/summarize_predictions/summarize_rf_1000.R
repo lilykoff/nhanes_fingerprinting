@@ -22,6 +22,7 @@ force = FALSE
   pred_dir = here::here("data", "lily", "data", "fingerprint_res", "1000rf")
   force = FALSE
   n_max = 13367
+  no_nzv_dat = FALSE
   testdata_name = "dat_nzv_test_1000"
   out_dir = here::here("data", "lily", "data", "fingerprint_prediction_results")
 
@@ -44,6 +45,10 @@ force = FALSE
           summarize(n = sum(complete), .groups = "drop") %>%
           filter(n == 1000) %>%
           pull(fold)
+#
+#         filenames %>%
+#           mutate(complete = id %in% file_ids) %>%
+#           filter(fold == 11 & !complete)
 
         summary = map_dfr(
           .x = folds,

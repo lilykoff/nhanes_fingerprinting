@@ -19,6 +19,9 @@ Rnosave 01_get_grid_cell_predictors_sc_small.R -J GCPREDS_SMALL --mem=15G --arra
 
 Rnosave 01_get_grid_cell_predictors_temporal_sc_small.R -J GCPREDS_T_SMALL --mem=15G --array=1-200 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
+Rnosave 01_get_grid_cell_predictors_30min.R -J GCPREDS_30 --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+
+
 # process the predictors to make one file w/ all predictors
 Rnosave 02_process_predictors_fine.R -J PROCPREDFINE --mem=70G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 Rnosave 02_process_predictors_temporal.R -J PROCPREDTEMP --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
@@ -31,6 +34,9 @@ Rnosave 02_process_predictors_sc.R -J PROCPRED_SC --mem=120G -o eofiles/%x_%A.ou
 Rnosave 02_process_predictors_temporal_sc.R -J PROCPRED_SCT --mem=120G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 Rnosave 02_process_predictors_sc_small.R -J PROCPRED_SCS --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 Rnosave 02_process_predictors_temporal_sc_small.R -J PROCPRED_T_SCS --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
+
+Rnosave 02_process_predictors_temporal_30min.R -J PROCPRED_ADT --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
+Rnosave 02_process_predictors_30min.R -J PROCPRED_AD --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 
 # make train/test data and folds
 Rnosave 03_make_folds.R -J MAKEFOLDS --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
@@ -201,6 +207,10 @@ Rnosave run_large_weighted_temporal_scs.R -J FPALLW_T --export=INPUT=10770 --mem
 Rnosave run_temporal_sc.R -J FP100T_SC --export=INPUT=100 --mem=30G --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_sc.R -J FP100_SC --export=INPUT=100 --mem=15G --qos=shared-400-4 --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
+# stepcount with n = 100, 3 min of data
+Rnosave run_scs.R -J FP100_SCS --export=INPUT=100 --mem=15G --qos=shared-400-4 --array=1-153 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_temporal_scs.R -J FP100_SCST --export=INPUT=100 --mem=15G --qos=shared-400-4 --array=1-109 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+
 ## need to run
 
 Rnosave summarize_sc_temp.R -J SUMMSC_TEMP --mem=50G --time=3-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
@@ -210,3 +220,4 @@ Rnosave sct_1.R -J SMS1 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/
 Rnosave sct_2.R -J SMS2 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
 Rnosave sct_3.R -J SMS3 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
 Rnosave sct_4.R -J SMS4 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
+Rnosave sctl_1.R -J SMS5 --mem=40G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4j

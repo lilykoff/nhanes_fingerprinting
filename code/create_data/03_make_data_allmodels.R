@@ -472,3 +472,64 @@ for(s in sizes){
 }
 
 
+
+outfiles = c(here::here("data", "lily", "data", "dat_nzv_train_30min.rds"),
+             here::here("data", "lily", "data", "dat_nzv_test_30min.rds"))
+
+if(!all(file.exists(outfiles))) {
+  xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells_30min.csv.gz"))
+  # xdf = readr::read_csv(here::here("data", "lily", "data", "sample_grid_cells.csv.gz"))
+
+  set.seed(123)
+  initialsplit = initial_split(xdf, prop = 3/4, strata = id)
+
+  data_train = training(initialsplit)
+  data_test = testing(initialsplit)
+
+  # first we want to remove columns with near zero variance
+  nzv_trans =
+    recipe(id ~ ., data = data_train) %>%
+    step_nzv(all_predictors())
+
+  nzv_estimates = prep(nzv_trans)
+
+  nzv = colnames(juice(nzv_estimates))
+  dat_nzv = data_train %>% dplyr::select(id, all_of(nzv))
+  dat_nzv_test = data_test %>% dplyr::select(id, all_of(nzv))
+
+  write_rds(dat_nzv, outfiles[1], compress = "xz")
+  write_rds(dat_nzv_test, outfiles[2], compress = "xz")
+  rm(dat_nzv_test)
+  rm(dat_nzv)
+  rm(data_train)
+  rm(data_test)
+}
+
+outfiles = c(here::here("data", "lily", "data", "dat_nzv_train_temporal_30min.rds"),
+             here::here("data", "lily", "data", "dat_nzv_test_temporal_30min.rds"))
+
+if(!all(file.exists(outfiles))) {
+  xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells_temporal_30min.csv.gz"))
+  # xdf = readr::read_csv(here::here("data", "lily", "data", "sample_grid_cells.csv.gz"))
+
+  data_train = xdf %>% filter(data == "train")
+  data_test = xdf %>% filter(data == "test")
+
+  # first we want to remove columns with near zero variance
+  nzv_trans =
+    recipe(id ~ ., data = data_train) %>%
+    step_nzv(all_predictors())
+
+  nzv_estimates = prep(nzv_trans)
+
+  nzv = colnames(juice(nzv_estimates))
+  dat_nzv = data_train %>% dplyr::select(id, all_of(nzv))
+  dat_nzv_test = data_test %>% dplyr::select(id, all_of(nzv))
+
+  write_rds(dat_nzv, outfiles[1], compress = "xz")
+  write_rds(dat_nzv_test, outfiles[2], compress = "xz")
+  rm(dat_nzv_test)
+  rm(dat_nzv)
+  rm(data_train)
+  rm(data_test)
+}

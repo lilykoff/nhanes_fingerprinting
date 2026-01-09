@@ -13,8 +13,8 @@ if(!is.null(ifold)){
   df = fnames %>% filter(fold == ifold)
 }
 
-if(!dir.exists(here::here("data", "lily", "data", "grid_cell_data_temporal_sc"))){
-  dir.create(here::here("data", "lily", "data", "grid_cell_data_temporal_sc"))
+if(!dir.exists(here::here("data", "lily", "data", "grid_cell_data_temporal_30min"))){
+  dir.create(here::here("data", "lily", "data", "grid_cell_data_temporal_30min"))
 }
 
 # df = fnames %>% filter(fold == 1)
@@ -24,7 +24,7 @@ get_density = function(subject, df = df){
   idf = df %>% filter(id == subject)
   x = try({
     walking_df =
-      readr::read_csv(here::here("data", "lily", "data", "fingerprint_data_sc", idf$version, paste0(idf$id, ".csv.gz")))
+      readr::read_csv(here::here("data", "lily", "data", "fingerprint_data", idf$version, paste0(idf$id, ".csv.gz")))
     # get segments of consecutive walking with < 2 seconds between them that are at least 10 seconds long
     segments_10 = walking_df %>%
       select(second, day) %>%
@@ -96,7 +96,7 @@ get_density = function(subject, df = df){
 }
 
 outname = paste0("grid_data_fold_", ifold, ".csv.gz")
-if(!file.exists(here::here("data", "lily", "data", "grid_cell_data_temporal_sc", outname)) | force){
+if(!file.exists(here::here("data", "lily", "data", "grid_cell_data_temporal_30min", outname)) | force){
   grid_data_list =
     map(.x = df$id, .f = get_density, df = df)
 
@@ -106,6 +106,6 @@ if(!file.exists(here::here("data", "lily", "data", "grid_cell_data_temporal_sc",
     bind_rows() %>%
     janitor::clean_names()
 
-  readr::write_csv(grid_data_df, here::here("data", "lily", "data", "grid_cell_data_temporal_sc", outname))
+  readr::write_csv(grid_data_df, here::here("data", "lily", "data", "grid_cell_data_temporal_30min", outname))
 
 }

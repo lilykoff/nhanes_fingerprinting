@@ -250,3 +250,21 @@ purrr::pwalk(.l = list(outfile = outfiles,
              exp = FALSE,
              n_max = 10770,
              no_nzv_dat = FALSE)
+
+
+###
+get_summarized_predictions_full(
+  exp = FALSE,
+  individual = FALSE,
+  outfile = "prediction_res_scs_100.rds",
+  dirnum = 100,
+  filenames_file = "fingerprint_folds.rds",
+  pred_dir = here::here("data", "lily", "data", "fingerprint_res_scs", "100")
+)
+
+# files = seq(109, 153, 1)
+# out = paste(here::here("data/lily/data/fingerprint_res_temporal_scs/100/"),
+#   "fold_", files, ".rds", sep = "")
+#
+# file.remove(out)
+
