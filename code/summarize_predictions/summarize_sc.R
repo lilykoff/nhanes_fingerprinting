@@ -268,3 +268,49 @@ get_summarized_predictions_full(
 #
 # file.remove(out)
 
+get_summarized_predictions_full(
+  exp = FALSE,
+  individual = TRUE,
+  outfile = "prediction_res_temporal_30min.rds",
+  dirnum = 1541,
+  n_max = 1541,
+  testdata_name = "dat_nzv_test_temporal_30min",
+  no_nzv_dat = FALSE,
+  filenames_file = "fingerprint_folds_temporal_30min.rds",
+  pred_dir = here::here("data", "lily", "data", "fingerprint_res_temporal_30min", "1541")
+)
+
+get_summarized_predictions_full(
+  exp = FALSE,
+  individual = TRUE,
+  outfile = "prediction_res_30min.rds",
+  dirnum = 5302,
+  n_max = 5302,
+  testdata_name = "dat_nzv_test_30min",
+  no_nzv_dat = FALSE,
+  filenames_file = "fingerprint_folds_30min.rds",
+  pred_dir = here::here("data", "lily", "data", "fingerprint_res_30min", "5302")
+)
+
+
+get_summarized_predictions_full(
+  exp = FALSE,
+  individual = FALSE,
+  outfile = "prediction_res_temporal_100_30min.rds",
+  dirnum = 100,
+  # testdata_name = "dat_nzv_test_temporal_30min",
+  no_nzv_dat = TRUE,
+  filenames_file = "fingerprint_folds_temporal_30min.rds",
+  pred_dir = here::here("data", "lily", "data", "fingerprint_res_temporal_30min", "100")
+)
+
+get_summarized_predictions_full(
+  exp = FALSE,
+  individual = FALSE,
+  outfile = "prediction_res_100_30min.rds",
+  dirnum = 100,
+  # testdata_name = "dat_nzv_test_temporal_30min",
+  no_nzv_dat = TRUE,
+  filenames_file = "fingerprint_folds_30min.rds",
+  pred_dir = here::here("data", "lily", "data", "fingerprint_res_30min", "100")
+)
