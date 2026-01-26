@@ -46,7 +46,8 @@ Rnosave 03_make_data_allmodels.R -J MAKEDAT --mem=20G -o eofiles/%x_%A.out -e eo
 
 Rnosave 03_make_data_sc.R -J MDAT --mem=200G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
-
+Rnosave 03_make_sc_temporal_30min.R -J MDAT_SCT --mem=200G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave 03_make_sc_30min.R -J MDAT_SC --mem=200G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 # regress on covariates (outcome is grid cell, predictor is covariate)
 Rnosave 04_regress_on_covars.R -J REGRESSF3 --mem=120G --cpus-per-task=8 --ntasks=1 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
@@ -192,8 +193,8 @@ Rnosave run_temporal_sc_large.R -J FPLARGET --export=INPUT=15374 --mem=100G --ar
 Rnosave run_sc_large.R -J FPLARGE --export=INPUT=15374 --mem=150G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 # running temporal weighted
 Rnosave run_temporal_sc_large_weighted.R -J WT_FPLARGET --export=INPUT=15374 --mem=150G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-# need to run
-Rnosave run_sc_large_weighted.R -J WT_FPLARGE --export=INPUT=15374 --mem=150G --array=1-1000%20 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+# THIS IS LAST BIGGIE THAT NEEDS TO RUN
+Rnosave run_sc_large_weighted.R -J WT_FPLARGE --export=INPUT=15374 --mem=150G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
 # stepcount with small dataset
 # random and random, weighted
@@ -215,12 +216,14 @@ Rnosave run_temporal_scs.R -J FP100_SCST --export=INPUT=100 --mem=15G --qos=shar
 
 # ADEPT 30 min
 Rnosave run_temporal_large_30min.R -J FPT_30 --mem=30G --array=1-772 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
-Rnosave run_large_30min.R -J FP_30 --mem=50G --array=2-884 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave run_large_30min.R -J FP_30 --mem=50G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --dependency=afterok:26279565
+Rnosave run_large_30min.R -J FP_30 --mem=50G --array=1-884 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
-Rnosave run_30min.R -J FP100_30 --mem=15G --array=1-53 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
-Rnosave run_temporal_30min.R -J FPT100_30 --mem=15G --array=1-15 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+Rnosave run_30min.R -J FP100_30 --mem=110G --array=1-53 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+Rnosave run_temporal_30min.R -J FPT100_30 --mem=30G --array=1-15 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
+# SC 30 min on same
+Rnosave run_temporal_large_sc_30min.R -J FPT_30_SC --mem=30G --array=1-772 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+Rnosave run_large_sc_30min.R -J FP_30_SC --mem=30G --array=1-884 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
 ## need to run
 

@@ -52,7 +52,7 @@ purrr::pwalk(.l = list(outfile = outfiles,
                        pred_dir = pred_dirs),
              .f = get_summarized_predictions_full,
              filenames_file = "folds_sc.rds",
-             out_dir = here::here("data", "lily", "data", "fingerprint_prediction_results_sc"),
+             # out_dir = here::here("data", "lily", "data", "fingerprint_prediction_results_sc"),
              individual = FALSE,
              exp = FALSE,
              out_dir = here::here("data", "lily", "data", "fingerprint_prediction_results_sc"),
@@ -280,6 +280,7 @@ get_summarized_predictions_full(
   pred_dir = here::here("data", "lily", "data", "fingerprint_res_temporal_30min", "1541")
 )
 
+# here
 get_summarized_predictions_full(
   exp = FALSE,
   individual = TRUE,
