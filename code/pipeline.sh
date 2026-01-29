@@ -11,6 +11,7 @@ Rnosave 01_get_grid_cell_predictors_temporal.R -J GCPREDS_TEMP --mem=15G --array
 Rnosave 01_get_grid_cell_predictors_long.R -J GCPREDS_LONG --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave 01_get_grid_cell_predictors_long_temporal.R -J GCPREDS_LONG_TEMP --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave 01_get_grid_cell_predictors_temporal2.R -J GCPREDS_TEMP2 --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave 01_get_grid_cell_predictors_temporal_days.R -J GCPREDS_TEMPD --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
 
 Rnosave 01_get_grid_cell_predictors_sc.R -J GCPREDS_SC --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err

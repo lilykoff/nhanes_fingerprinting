@@ -315,3 +315,29 @@ get_summarized_predictions_full(
   filenames_file = "fingerprint_folds_30min.rds",
   pred_dir = here::here("data", "lily", "data", "fingerprint_res_30min", "100")
 )
+
+### new ###
+get_summarized_predictions_full(
+  exp = FALSE,
+  individual = TRUE,
+  outfile = "prediction_res_30min_sc.rds",
+  dirnum = 5302,
+  n_max = 5302,
+  testdata_name = "dat_nzv_test_30min_sc",
+  no_nzv_dat = FALSE,
+  filenames_file = "fingerprint_folds_30min.rds",
+  pred_dir = here::here("data", "lily", "data", "fingerprint_res_30min_sc", "5302")
+)
+
+get_summarized_predictions_full(
+  exp = FALSE,
+  individual = TRUE,
+  outfile = "prediction_res_temporal_30min_sc.rds",
+  dirnum = 5302,
+  n_max = 5302,
+  testdata_name = "dat_nzv_test_temporal_30min_sc",
+  no_nzv_dat = FALSE,
+  filenames_file = "fingerprint_folds_temporal_30min.rds",
+  pred_dir = here::here("data", "lily", "data", "fingerprint_res_temporal_30min_sc", "1541")
+)
+
