@@ -40,6 +40,9 @@ Rnosave 02_process_predictors_temporal_sc_small.R -J PROCPRED_T_SCS --mem=50G -o
 Rnosave 02_process_predictors_temporal_30min.R -J PROCPRED_ADT --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 Rnosave 02_process_predictors_30min.R -J PROCPRED_AD --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
 
+
+Rnosave 02_process_predictors_temporal_days.R -J PROCPRED_TD --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+
 # make train/test data and folds
 Rnosave 03_make_folds.R -J MAKEFOLDS --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave 03_make_data_allmodels.R -J MAKEDAT --mem=20G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
@@ -49,6 +52,8 @@ Rnosave 03_make_data_sc.R -J MDAT --mem=200G -o eofiles/%x_%A.out -e eofiles/%x_
 
 Rnosave 03_make_sc_temporal_30min.R -J MDAT_SCT --mem=200G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave 03_make_sc_30min.R -J MDAT_SC --mem=200G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave 03_make_temporal_days.R -J MDAT_TEMPD --mem=100G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
+
 # regress on covariates (outcome is grid cell, predictor is covariate)
 Rnosave 04_regress_on_covars.R -J REGRESSF3 --mem=120G --cpus-per-task=8 --ntasks=1 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 

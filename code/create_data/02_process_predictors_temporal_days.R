@@ -8,20 +8,56 @@ length(files)
 # nums %>% sort()
 # seq(1:200)[!(seq(1:200) %in% nums)]
 
+if(!file.exists(here::here("data", "lily", "data", "train_test_temporal_days.rds"))) {
+  pred_dist =
+    files %>%
+    map(., .f = function(x){
+      readr::read_csv(x) %>%
+        group_by(id, data, day) %>%
+        count()
+    }) %>%
+    bind_rows()
+  write_rds(pred_dist, here::here("data", "lily", "data", "train_test_temporal_days.rds"))
+}
 
 all_preds =
   files %>%
   map(., .f = function(x){
     file = readr::read_csv(x)
-    keep = file %>% group_by(id, data) %>%
-      count() %>%
-      pivot_wider(values_from = n, names_from =data) %>%
-      filter(train >= 180*.75, test >= 180*.25) %>%
+    sample = file %>%
+      group_by(id, data, day) %>%
+      count()
+
+    keep =
+      sample %>%
+      ungroup() %>%
+      select(id, data, n) %>%
+      group_by(data, id) %>%
+      summarize(n = sum(n), .groups = "drop") %>%
+      pivot_wider(values_from = n, names_from = data) %>%
+      filter(test >= 60 & train >= 180) %>%
       pull(id)
-    file %>%
-      filter(id %in% keep)
+    # if there's more than 10 min on a day, take random sample of 10 min
+
+    start_inds =
+      sample %>%
+      filter(id %in% keep) %>%
+      mutate(start = if_else(n > (10 * 60), sample(1:(n - 600), 1), 1),
+             end = if_else(n > (10 * 60), start + 600 - 1, n))
+
+    preds = file %>%
+      filter(id %in% keep) %>%
+      group_by(id, day, data) %>%
+      mutate(rn = row_number()) %>%
+      left_join(start_inds, by = c("id", "data", "day")) %>%
+      filter(rn >= start & rn <= end) %>%
+      ungroup() %>%
+      select(id, data, starts_with("x"))
+    rm(file)
+    preds
   }) %>%
   bind_rows()
+
 
 readr::write_csv(all_preds, here::here("data", "lily", "data", "all_grid_cells_temporal_days.csv.gz"))
 
