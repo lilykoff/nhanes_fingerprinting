@@ -223,6 +223,7 @@ Rnosave run_temporal_scs.R -J FP100_SCST --export=INPUT=100 --mem=15G --qos=shar
 # ADEPT 30 min
 Rnosave run_temporal_large_30min.R -J FPT_30 --mem=30G --array=1-772 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 Rnosave run_large_30min.R -J FP_30 --mem=50G --array=1-884 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave run_large_30min_weighted.R -J FP_30W --mem=50G --array=1-884 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 Rnosave run_30min.R -J FP100_30 --mem=110G --array=1-53 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 Rnosave run_temporal_30min.R -J FPT100_30 --mem=30G --array=1-15 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
@@ -230,6 +231,10 @@ Rnosave run_temporal_30min.R -J FPT100_30 --mem=30G --array=1-15 --time=1-00 -o 
 # SC 30 min on same
 Rnosave run_temporal_large_sc_30min.R -J FPT_30_SC --mem=30G --array=1-772 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 Rnosave run_large_sc_30min.R -J FP_30_SC --mem=30G --array=1-884 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
+Rnosave run_temporal_large_30min_weighted.R -J FPT_30W --mem=30G --array=1-772 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+
+## temporal adept
+Rnosave run_temporal_days.R -J FPT_DAYS --mem=30G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
 ## need to run
 
@@ -240,5 +245,5 @@ Rnosave sct_1.R -J SMS1 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/
 Rnosave sct_2.R -J SMS2 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
 Rnosave sct_3.R -J SMS3 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
 Rnosave sct_4.R -J SMS4 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
-Rnosave sctl_1.R -J SMS5 --mem=40G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4j
+Rnosave sctl_1.R -J SMS5 --mem=50G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4j
 
