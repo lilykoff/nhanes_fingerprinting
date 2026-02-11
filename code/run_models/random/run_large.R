@@ -3,7 +3,7 @@ library(tidymodels)
 source(here::here("code", "R", "utils.R"))
 fold = NULL
 rm(list = c("fold"))
-force = FALSE
+force = TRUE
 # each one takes about 10 min and 20G (30 to be safe)
 # 1024 gb per user = 34 jobs at once
 # 13367 total = 92 days / 34 = ~ 3 days
@@ -19,7 +19,7 @@ fit_model = function(subject, train, test) {
   tmp <- train %>% dplyr::select(-id)
   tmp_test <- test %>% dplyr::select(-id)
   mod <-
-    glm(class ~ ., data = tmp, weights = wts, family = binomial(link = "logit"))
+    glm(class ~ ., data = tmp, family = binomial(link = "logit"))
   pred <- predict.glm(mod, newdata = tmp_test, type = "response")
   return(pred)
 }
@@ -90,7 +90,7 @@ for(f in folds$fold){
       dir.create(dir, recursive = TRUE)
     }
 
-    if(!file.exists(outfile) | force){
+    if(!file.exists(outfile) || force){
       x = try({
 
         preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test) %>% janitor::clean_names()
