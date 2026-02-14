@@ -147,7 +147,7 @@ Rnosave run_temporal_long_large.R -J FP10000LT --export=INPUT=8018 --mem=40G --a
 Rnosave run_temporal_longsubset.R -J FP8018 --export=INPUT=8018 --mem=15G --array=1-891 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave run_longsubset.R -J FP10129 --export=INPUT=10129 --mem=20G --array=1-921 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
-Rnosave analyze_preds.R -J AP --mem=40G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave analyze_preds_script.R -J AP --mem=40G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --qos=shared-400-4 --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 # oversampling
 Rnosave run_temporal_oversamp.R -J PCT100T --export=INPUT=100 --mem=35G --array=1-107 --time=10-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
