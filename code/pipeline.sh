@@ -68,9 +68,9 @@ Rnosave run.R -J FP1000 --export=INPUT=1000 --mem=100G --array=1-13 --time=3-00 
 Rnosave run_large.R -J FP2500 --export=INPUT=2500 --mem=30G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_large.R -J FP5000 --export=INPUT=5000 --mem=30G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_large.R -J FP10000 --export=INPUT=10000 --mem=40G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
-Rnosave run_large.R -J FPALL --export=INPUT=13367 --mem=40G --array=1 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_large.R -J FPALL --export=INPUT=13367 --mem=40G --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
-Rnosave run_large_weighted.R -J FPWT --export=INPUT=13367 --mem=15G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_large_weighted.R -J FPWT --export=INPUT=13367 --mem=15G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
 
 # lasso
@@ -248,3 +248,7 @@ Rnosave sct_3.R -J SMS3 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/
 Rnosave sct_4.R -J SMS4 --mem=30G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4
 Rnosave sctl_1.R -J SMS5 --mem=50G --time=10-00  -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu --qos=shared-400-4j
 
+# revision 2
+
+Rnosave pca.R -J PCA --mem=200G --time=2-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave run_large_weighted_pca.R -J FPWT_PCA --export=INPUT=13367 --mem=15G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
