@@ -253,4 +253,6 @@ Rnosave sctl_1.R -J SMS5 --mem=50G --time=10-00  -o eofiles/%x_%A.out -e eofiles
 # revision 2
 
 Rnosave pca.R -J PCA --mem=100G --time=2-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave run_large_weighted_pca.R -J FPWT_PCA --export=INPUT=13367 --mem=60G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave run_large_weighted_pca.R -J FPWT_PCA --export=INPUT=13367 --mem=60G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave 01_get_random_mixed_predictors.R -J GCPREDS_RM --mem=15G --array=1-200 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+
