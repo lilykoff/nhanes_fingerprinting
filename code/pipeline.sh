@@ -3,6 +3,8 @@ Rnosave 00_get_fingerprints.R -J FINGERPRINTNEW --mem=15G --array=1-200 --time=3
 
 Rnosave 00_get_fingerprints_sc.R -J FINGERPRINTSC --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 
+Rnosave 00_get_grid_cell_predictors_random.R -J GCPREDS_RANDOM --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+
 
 # get the grid cell predictors - regular, fine, and temporal
 Rnosave 01_get_grid_cell_predictors.R -J GCPREDS --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
@@ -250,5 +252,5 @@ Rnosave sctl_1.R -J SMS5 --mem=50G --time=10-00  -o eofiles/%x_%A.out -e eofiles
 
 # revision 2
 
-Rnosave pca.R -J PCA --mem=200G --time=2-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave run_large_weighted_pca.R -J FPWT_PCA --export=INPUT=13367 --mem=15G --array=1 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave pca.R -J PCA --mem=100G --time=2-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave run_large_weighted_pca.R -J FPWT_PCA --export=INPUT=13367 --mem=60G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
