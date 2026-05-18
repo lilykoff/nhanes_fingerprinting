@@ -254,5 +254,10 @@ Rnosave sctl_1.R -J SMS5 --mem=50G --time=10-00  -o eofiles/%x_%A.out -e eofiles
 
 Rnosave pca.R -J PCA --mem=100G --time=2-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave run_large_weighted_pca.R -J FPWT_PCA --export=INPUT=13367 --mem=60G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave 00_get_grid_cell_predictors_random.R -J GCPREDS_RANDOM --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 Rnosave 01_get_random_mixed_predictors.R -J GCPREDS_RM --mem=15G --array=1-200 --time=1-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave 00_get_grid_cell_predictors_random.R -J GCPREDS_RANDOM --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --qos=shared-400-4
 
+Rnosave weighted_pca.R -J SUMM_WPCA --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave 02_process_predictors_mixed_random.R -J PROCPRED_MR --mem=70G -o eofiles/%x_%A.out -e eofiles/%x_%A.err
+Rnosave 03_make_data_random.R -J MAKEDAT_R --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
