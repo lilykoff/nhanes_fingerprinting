@@ -1,15 +1,15 @@
 library(tidyverse)
-library(tidymodels)
 
-force = FALSE
+filenames = read_rds(here::here("data", "lily", "data", "fingerprint_folds_random.rds"))
 
-filenames = readRDS(here::here("data", "lily", "data", "fingerprint_folds_random.rds"))
+filenames_org = read_rds(here::here("data", "lily", "data", "fingerprint_folds.rds"))
 
 outfiles = c(here::here("data", "lily", "data", "dat_nzv_train_random.rds"),
              here::here("data", "lily", "data", "dat_nzv_test_random.rds"))
 
-if(!all(file.exists(outfiles))) {
-  xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells_random.csv.gz"))
+if(!all(file.exists(outfiles)) || force) {
+  xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells_random.csv.gz")) %>%
+    filter(id %in% filenames_org$id)
 
   set.seed(123)
   initialsplit = initial_split(xdf, prop = 3/4, strata = id)
@@ -41,7 +41,8 @@ filenames = readRDS(here::here("data", "lily", "data", "fingerprint_folds_mixed.
 outfiles = c(here::here("data", "lily", "data", "dat_nzv_train_mixed.rds"),
              here::here("data", "lily", "data", "dat_nzv_test_mixed.rds"))
 
-if(!all(file.exists(outfiles))) {
+if(!all(file.exists(outfiles)) || force) {
+
   xdf = readr::read_csv(here::here("data", "lily", "data", "all_grid_cells_mixed.csv.gz"))
 
   set.seed(123)
