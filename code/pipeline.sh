@@ -263,3 +263,4 @@ Rnosave 02_process_predictors_mixed_random.R -J PROCPRED_MR --mem=70G -o eofiles
 Rnosave 03_make_data_random.R -J MAKEDAT_R --mem=50G -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave run_large_weighted_mixed.R -J FPWT_M --export=INPUT=13367 --mem=15G --array=1-100 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_large_weighted_random.R -J FPWT_R --export=INPUT=13367 --mem=15G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave logistic_mixed.R -J SUMM_MIXED --mem=40G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu

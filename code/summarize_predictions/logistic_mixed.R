@@ -26,7 +26,8 @@ pred_dirs = paste(
   sep = "/"
 )
 
-testdata_names = "dat_test_pca"
+
+testdata_names = "dat_nzv_test_mixed"
 
 purrr::pwalk(.l = list(outfile = outfiles,
                        dirnum = 13367,
