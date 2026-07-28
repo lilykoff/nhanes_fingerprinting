@@ -264,3 +264,22 @@ Rnosave 03_make_data_random.R -J MAKEDAT_R --mem=50G -o eofiles/%x_%A.out -e eof
 Rnosave run_large_weighted_mixed.R -J FPWT_M --export=INPUT=13367 --mem=15G --array=1-100 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave run_large_weighted_random.R -J FPWT_R --export=INPUT=13367 --mem=15G --array=1-1000 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
 Rnosave logistic_mixed.R -J SUMM_MIXED --mem=40G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave logistic_random.R -J SUMM_RANDOM --mem=40G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+
+Rnosave subsets.R -J SUBSETS1000 --mem=5G --time=3-00 --export=INPUT=1000 --array=1=-000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave subsets_random.R -J SUMM_SUBSETS --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave subsets.R -J SUBSETS500 --mem=3G --time=3-00 --export=INPUT=500 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave subsets.R -J SUBSETS2500 --mem=5G --time=3-00 --export=INPUT=2500 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave stepwise.R -J STEP --mem=30G --time=5-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave run_stepwise.R -J FP100_STEP --export=INPUT=100 --mem=40G --array=1-133 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err
+Rnosave benchmarking.R -J BENCHMK --mem=50G --time=3-00 o eofiles/%x_%A.out -e eofiles/%x_%A.err
+Rnosave subsets.R -J SUBSETS5000 --mem=15G --time=3-00 --export=INPUT=5000 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave sr_temp.R -J SUMM_SUBSETS2500 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave sr_temp2.R -J SUMM_SUBSETS5k --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+
+
+Rnosave x1.R -J X1 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave x2.R -J X2 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave x3.R -J X3 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave x4.R -J X4 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave x5.R -J X5 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu

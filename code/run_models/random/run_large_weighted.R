@@ -29,6 +29,36 @@ fit_model = function(subject, train, test) {
   return(pred)
 }
 
+fit_model_fast = function(subject, train, test) {
+  # Create class vector directly (faster than ifelse)
+  class <- as.integer(train$id == subject)
+
+  # Calculate weights once
+  n1 <- sum(class)
+  n0 <- length(class) - n1
+  wts <- ifelse(class == 1, 1/n1, 1/n0)
+
+  # Remove id columns without dplyr (faster)
+  train_idx <- which(names(train) != "id")
+  test_idx <- which(names(test) != "id")
+
+  # Fit model with matrix input if possible
+  mod <- glm.fit(
+    x = cbind(1, as.matrix(train[, train_idx])),
+    y = class,
+    weights = wts,
+    family = binomial()
+  )
+
+  # Manual prediction (faster than predict.glm)
+  test_matrix <- cbind(1, as.matrix(test[, test_idx]))
+  pred <- plogis(test_matrix %*% mod$coefficients)
+
+
+  return(as.vector(pred))
+}
+
+
 ifold = get_fold()
 size = get_input()
 filenames = readRDS(here::here("data", "lily", "data", "fingerprint_folds.rds"))
@@ -97,9 +127,7 @@ for(f in folds$fold){
 
       if(!file.exists(outfile) | force){
         x = try({
-
-          preds = fit_model(subject = id, train = dat_nzv, test = dat_nzv_test) %>% janitor::clean_names()
-
+          preds = fit_model_fast(subject = id, train = dat_nzv, test = dat_nzv_test) %>% janitor::clean_names()
           write_rds(preds, outfile, compress = "xz")
           rm(preds)
         })
