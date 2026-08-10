@@ -405,7 +405,7 @@ get_summarized_predictions_full_subset = function(exp = FALSE,
             ) %>%
             select(-rank) %>%
             summarize(across(contains("rank"), sum), n = n()) %>%
-            mutate(fold = f, n_target = n_max)
+            mutate(n_target = n_max)
           # filter(n == dirnum)
           rm(all_preds)
 
@@ -422,6 +422,7 @@ get_summarized_predictions_full_subset_par = function(exp = FALSE,
                                                   dirnum,
                                                   pred_dir,
                                                   filenames_file,
+                                                  test = "dat_nzv_test.rds",
                                                   num_cores = parallelly::availableCores() -1,
                                                   out_dir = here::here("data", "lily", "data", "fingerprint_prediction_results"),
                                                   force = FALSE){
@@ -451,7 +452,7 @@ get_summarized_predictions_full_subset_par = function(exp = FALSE,
         pred_dir,
         paste(ids_keep, ".rds", sep = "")
       ))
-      dat_nzv_test = read_rds(here::here("data", "lily", "data", "dat_nzv_test.rds")) %>%
+      dat_nzv_test = read_rds(here::here("data", "lily", "data", paste0(test))) %>%
         mutate(id = as.character(id))
 
       test_inds = dat_nzv_test %>%
@@ -466,7 +467,7 @@ get_summarized_predictions_full_subset_par = function(exp = FALSE,
       true_sub_vec = dat_nzv_test_keep$id
       rm(dat_nzv_test)
 
-      plan(multisession, workers = num_cores)
+      plan(multicore, workers = num_cores)
       all_preds =
         future_map_dfr(
           .x = files,
@@ -515,7 +516,7 @@ get_summarized_predictions_full_subset_par = function(exp = FALSE,
         ) %>%
         select(-rank) %>%
         summarize(across(contains("rank"), sum), n = n()) %>%
-        mutate(fold = f, n_target = n_max)
+        mutate(n_target = n_max)
       # filter(n == dirnum)
       rm(all_preds)
 
@@ -526,4 +527,98 @@ get_summarized_predictions_full_subset_par = function(exp = FALSE,
   })
   rm(x)
 }
+
+get_summarized_predictions_full_subset_par_long = function(exp = FALSE,
+                                                      outfile,
+                                                      dirnum,
+                                                      pred_dir,
+                                                      filenames_file,
+                                                      num_cores = parallelly::availableCores() -1,
+                                                      out_dir = here::here("data", "lily", "data", "fingerprint_prediction_results"),
+                                                      force = FALSE){
+
+  x = try({
+    out = here::here(out_dir, outfile)
+    print(out)
+    if (!file.exists(out) || force) {
+      n_max = floor(13367 / dirnum) * dirnum
+      filenames = read_rds(here::here("data", "lily", "data", filenames_file))
+      x = ceiling(nrow(filenames) / dirnum)
+      filenames = filenames %>%
+        mutate(fold = rep(1:x, each = dirnum)[1:nrow(filenames)])
+
+      folds = filenames %>%
+        count(fold) %>%
+        filter(n == dirnum) %>%
+        pull(fold)
+
+      ids_keep = filenames %>%
+        filter(fold %in% folds) %>%
+        mutate(id = as.character(id)) %>%
+        pull(id)
+
+
+      files = file.path(here::here(
+        pred_dir,
+        paste(ids_keep, ".rds", sep = "")
+      ))
+      dat_nzv_test = read_rds(here::here("data", "lily", "data", "dat_nzv_test.rds")) %>%
+        mutate(id = as.character(id))
+
+      test_inds = dat_nzv_test %>%
+        mutate(rn = row_number()) %>%
+        filter(id %in% ids_keep) %>%
+        pull(rn)
+
+      dat_nzv_test_keep =
+        dat_nzv_test %>%
+        filter(id %in% ids_keep)
+
+      true_sub_vec = dat_nzv_test_keep$id
+      rm(dat_nzv_test)
+
+      plan(multicore, workers = num_cores)
+      all_preds =
+        future_map_dfr(
+          .x = files,
+          .f = function(x) {
+            id_tmp = sub(".*\\/(.+).rds.*", "\\1", x)
+            tmp = read_rds(x) %>% as_tibble() %>%
+              mutate(rn = row_number()) %>%
+              filter(rn %in% test_inds) %>%
+              select(-rn) %>%
+              mutate(true_subject = true_sub_vec) %>%
+              magrittr::set_colnames(c(id_tmp, "true_subject")) %>%
+              group_by(true_subject) %>%
+              mutate(sec = row_number()) %>%
+              pivot_longer(
+                cols = -c("true_subject", "sec"),
+                names_to = "name",
+                values_to = "pred"
+              ) %>%
+              mutate(model = as.character(sub(".*x", "", name))) %>%
+              select(-name) %>%
+              # now we have the prediction for each second for each model / true subject combo
+              mutate(pred = case_when(exp ~ exp(pred), .default = pred)) %>% # exponentiate based on exp argument
+              ungroup() %>%
+              group_by(true_subject, model) %>%
+              # get mean probability across seconds for each true subject / model combo
+              summarize(mean_pred = mean(pred, na.rm = TRUE),
+                        .groups = "drop")
+            rm(id_tmp)
+            tmp
+          }
+        )
+
+      plan(sequential)
+
+
+
+      write_rds(all_preds, out, compress = "xz")
+
+    }
+  })
+  rm(x)
+}
+
 
