@@ -86,7 +86,8 @@ Run models in the random paradigm
 + `run_large.R`: fit one vs. rest logistic regression models for sample sizes of n=2500,5000,10000,13367. See `pipeline.sh` for how to run, result is file in `data/lily/data/fingerprint_res/<n>/<id>.rds`
 + `run_boosted_model.R`: runs the two-stage model sensitivity analysis 
 
-Rest of files follow similar format with `run` and `run_large`, but for models other than logistic regression (lasso, xgboost, scalar on function regression, random forest). The `oversamp` models are for the oversampling sensitivity analysis. 
+Rest of files follow similar format with `run` and `run_large`, but for models other than logistic regression (lasso, xgboost, scalar on function regression, random forest). The `oversamp` models are for the oversampling sensitivity analysis, `weighted` are for weighted logistic regression, `mixed`, `random`, and `pca` are for sensitivity analysis with induced error and PCA dimension reduction, respectively. `stepwise` is attempt to run stepwise model. 
+
 ### temporal
 Run models in the temporal paradigm 
 + `run_temporal.R`: fit one vs. rest logistic regression models for sample sizes of n=100, 500, 1000. See `pipeline.sh` for how to run, result is file in `data/lily/data/fingerprint_res_temporal2/<n>/fold_<fold>.rds`
@@ -102,6 +103,7 @@ Code to generate figures and tables for manuscript
 Other: 
 + `pipeline.sh`: bash code to run scripts on JHPCE cluster 
 + `get_walking_dists.R`: code to get distribution of walking bouts across population
-+ `summary_fns.R`: helper functions for summarize redictions files 
++ `summary_fns.R`: helper functions for summarize predictions files 
++ `nonwear_analysis.R`: checking overlap of nonwear and walking in data
 
 
