@@ -106,4 +106,8 @@ Other:
 + `summary_fns.R`: helper functions for summarize predictions files 
 + `nonwear_analysis.R`: checking overlap of nonwear and walking in data
 
+## revision 
+Code for additions for revisions
++ `n_train_benchmarking.R`: comparing time for models with different number of people in training data 
+
 
