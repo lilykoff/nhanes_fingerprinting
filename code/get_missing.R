@@ -379,3 +379,42 @@ for (dir in dirs) {
   }
 }
 
+
+
+
+    results_path = here::here("data", "lily", "data", "fingerprint_res_subset", "7500wtd_v4")
+    fname_path = here::here("data", "lily", "data", "fingerprint_folds.rds")
+
+  filenames = readRDS(fname_path)
+  size = 7500
+
+
+  if (!is.na(size)) {
+    x = ceiling(nrow(filenames) / size)
+    filenames = filenames %%
+      mutate(fold = rep(1:x, each = size)[1:nrow(filenames)])
+  }
+
+
+  fsize = ceiling(nrow(filenames) / 1000)
+  x = ceiling(nrow(filenames) / fsize)
+  filenames = filenames %%
+    mutate(fold2 = rep(1:x, each = fsize)[1:nrow(filenames)])
+
+
+    files = list.files(results_path)
+    ids = sub(".rds.*","",files)
+
+    missing = filenames %>%
+      mutate(id = as.character(id)) %>%
+      mutate(miss = !(id %in% ids))
+
+
+    x = missing %>%
+      filter(miss) %>%
+      select(fold2) %>%
+      unlist()
+
+    x %>% unique() %>% unname() %>% paste(., collapse = ",")
+
+
