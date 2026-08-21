@@ -4,7 +4,7 @@ library(tidyverse)
 
 
 
-subsets100 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_100_v3.rds")) %>%
+subsets100 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_100_v4.rds")) %>%
   mutate(across(-n_target, ~.x / n_target * 100)) %>%
   mutate(train_size = 100)
 
