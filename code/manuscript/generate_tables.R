@@ -83,7 +83,7 @@ all_100 =
   ) %>%
   filter(paradigm != "temporal")
 
-## RF RUN FROM HERE
+
 
 res_500 = c(list.files(here::here("results"), pattern = "*.\\_500.rds"),
             list.files(here::here("results"), pattern = "*.\\_500fnl.rds"),

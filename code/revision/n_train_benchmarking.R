@@ -179,65 +179,6 @@ columns = c("test", "replications", "elapsed",
 bench_sc
 write_rds(bench_sc, here::here("data", "lily", "data", "bench_sc_adept.rds"))
 
-bench = benchmark("100" = {
-  train_ids = sample(ids_to_sample, size = 99, replace = FALSE)
-  train_temp = dat_nzv_train %>% filter(id %in% c(train_ids, idx))
-  b = fit_model_fast(subject = idx,
-                     train = train_temp,
-                     test = dat_nzv_test)
-},
-"500" = {
-  train_ids = sample(ids_to_sample, size = 499, replace = FALSE)
-  train_temp = dat_nzv_train %>% filter(id %in% c(train_ids, idx))
-  b = fit_model_fast(subject = idx,
-                     train = train_temp,
-                     test = dat_nzv_test)
-},
-"1000" = {
-  train_ids = sample(ids_to_sample, size = 999, replace = FALSE)
-  train_temp = dat_nzv_train %>% filter(id %in% c(train_ids, idx))
-  b = fit_model_fast(subject = idx,
-                     train = train_temp,
-                     test = dat_nzv_test)
-},
-"2500" = {
-  train_ids = sample(ids_to_sample, size = 2499, replace = FALSE)
-  train_temp = dat_nzv_train %>% filter(id %in% c(train_ids, idx))
-  b = fit_model_fast(subject = idx,
-                     train = train_temp,
-                     test = dat_nzv_test)
-},
-"5000" = {
-  train_ids = sample(ids_to_sample, size = 4999, replace = FALSE)
-  train_temp = dat_nzv_train %>% filter(id %in% c(train_ids, idx))
-  b = fit_model_fast(subject = idx,
-                     train = train_temp,
-                     test = dat_nzv_test)
-},
-"N" = {
-  train_ids = sample(ids_to_sample, size = 13366, replace = FALSE)
-  train_temp = dat_nzv_train %>% filter(id %in% c(train_ids, idx))
-  b = fit_model_fast(subject = idx,
-                     train = train_temp,
-                     test = dat_nzv_test)
-},
-replications = 50,
-columns = c("test", "replications", "elapsed",
-            "relative", "user.self", "sys.self"))
-
-bench
-
-bench = tibble(
-  test = bench$test,
-  replications = bench$replications,
-  elapsed = bench$elapsed,
-  relative = bench$relative,
-  user.self = bench$user.self,
-  sys.self = bench$sys.self
-)
-
-write_rds(bench, here::here("data", "lily", "data", "bench_adept.rds"))
-
 bench_sc %>%
   mutate(across(-c(test, replications), ~.x / replications))
 

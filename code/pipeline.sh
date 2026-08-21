@@ -275,21 +275,16 @@ Rnosave sr_temp2.R -J SUMM_SUBSETS5k --mem=50G --time=3-00 -o eofiles/%x_%A.out 
 Rnosave subsets_temporal.R -J S1KTEMP --mem=5G --time=3-00 --export=INPUT=500 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 
-Rnosave subsets_v3.R -J S_500 --mem=5G --time=3-00 --export=INPUT=500 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave subsets_v3.R -J S_25k --mem=5G --time=3-00 --export=INPUT=2500 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave subsets_v3.R -J S_1k --mem=5G --time=3-00 --export=INPUT=1000 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave subsets_v3.R -J S_100 --mem=5G --time=3-00 --export=INPUT=100 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave subsets_v3.R -J S_5k --mem=5G --time=3-00 --export=INPUT=5000 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
-Rnosave subsets_v4.R -J S_100 --mem=5G --time=3-00 --export=INPUT=100 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave run_subsets.R -J S_100 --mem=5G --time=3-00 --export=INPUT=100 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave run_subsets.R -J S_75k --mem=10G --time=3-00 --export=INPUT=7500 --array=1-1000 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 
 
-Rnosave summarize_subsets_v3.R -J SUMM_100 --export=INPUT=100 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave summarize_subsets_v3.R -J SUMM_500 --export=INPUT=500 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave summarize_subsets_v3.R -J SUMM_1000 --export=INPUT=1000 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave summarize_subsets_v3.R -J SUMM_2500 --export=INPUT=2500 --cpus-per-task=8 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
-Rnosave summarize_subsets_v3.R -J SUMM_5000 --export=INPUT=5000 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave summarize_subsets.R -J SUMM_100 --export=INPUT=100 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave summarize_subsets.R -J SUMM_500 --export=INPUT=500 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave summarize_subsets.R -J SUMM_1000 --export=INPUT=1000 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave summarize_subsets.R -J SUMM_2500 --export=INPUT=2500 --cpus-per-task=8 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave summarize_subsets.R -J SUMM_5000 --export=INPUT=5000 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
-Rnosave summarize_subsets_v4.R -J SUMM_100_v4 --export=INPUT=100 --cpus-per-task=8 --mem=30G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
