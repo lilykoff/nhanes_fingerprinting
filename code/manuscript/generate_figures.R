@@ -12,71 +12,9 @@ temporal_subs = read_rds(here::here("data", "fingerprint_folds_temporal2.rds"))
 
 ### accuracies for n=100,n=500
 
-res_100 = c(list.files(here::here("results"), pattern = "*.\\_100.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100fnl.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100nlfnl.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100lasso.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100xgb.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100rf.rds"))
+all_100 = read_rds(here::here("results", "all_n100.rds"))
 
-all_100 =
-  map_dfr(res_100,
-          .f = function(x){
-            read_rds(here::here("results", x)) %>%
-              mutate(name = x)
-          }) %>%
-  mutate(
-    type = case_when(
-      sub(".*\\d(.+).rds.*", "\\1", name) == "xgb" ~ "XGBoost",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "long" ~ "Long",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "lasso" ~ "Lasso",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "rf" ~ "Random Forest",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "fnl" ~ "Linear SoFR",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "nlfnl" ~ "Nonlinear SoFR",
-      .default = "Logistic"
-    ),
-    paradigm = case_when(
-      grepl("temporal2", name) ~ "temporal2",
-      grepl("temporal", name) ~ "temporal",
-      .default = "random"
-    )
-  ) %>%
-  filter(paradigm != "temporal")
-
-
-res_500 = c(list.files(here::here("results"), pattern = "*.\\_500.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500fnl.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500nlfnl.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500lasso.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500xgb.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500rf.rds"))
-
-all_500 =
-  map_dfr(res_500,
-          .f = function(x){
-            read_rds(here::here("results", x)) %>%
-              mutate(name = x) %>%
-              mutate(fold = as.numeric(fold))
-          }) %>%
-  mutate(
-    type = case_when(
-      sub(".*\\d(.+).rds.*", "\\1", name) == "xgb" ~ "XGBoost",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "long" ~ "Long",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "lasso" ~ "Lasso",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "rf" ~ "Random Forest",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "fnl" ~ "Linear SoFR",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "nlfnl" ~ "Nonlinear SoFR",
-      .default = "Logistic"
-    ),
-    paradigm = case_when(
-      grepl("temporal2", name) ~ "temporal2",
-      grepl("temporal", name) ~ "temporal",
-      .default = "random"
-    )
-  ) %>%
-  filter(paradigm != "temporal")
-
-
+all_500 = read_rds(here::here("results", "all_n500.rds"))
 
 p1 = all_100 %>%
   bind_rows(all_500 %>% mutate(fold = as.character(fold))) %>%
@@ -139,42 +77,7 @@ p1 / p2  + plot_layout(axes = "collect")
 # plot_annotation(tag_levels = "A")
 dev.off()
 
-res_logistic = c(list.files(here::here("results"), pattern = "*.\\_100.rds"),
-                 list.files(here::here("results"), pattern = "*.\\_500.rds"),
-                 list.files(here::here("results"), pattern = "*.\\_1000.rds"),
-                 list.files(here::here("results"), pattern = "*.\\_2500.rds"),
-                 list.files(here::here("results"), pattern = "*.\\_5000.rds"),
-                 list.files(here::here("results"), pattern = "*.\\_10000.rds"),
-                 list.files(here::here("results"), pattern = "*.\\_13367.rds"),
-                 list.files(here::here("results"), pattern = "*.\\_10770.rds"))
-
-all_logistic =
-  map_dfr(res_logistic,
-          .f = function(x){
-            read_rds(here::here("results", x)) %>%
-              mutate(name = x) %>%
-              mutate(fold = as.numeric(fold))
-          }) %>%
-  mutate(
-    type = case_when(
-      sub(".*\\d(.+).rds.*", "\\1", name) == "xgb" ~ "XGBoost",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "long" ~ "Long",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "lasso" ~ "Lasso",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "rf" ~ "Random Forest",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "fnl" ~ "Linear SoFR",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "nlfnl" ~ "Nonlinear SoFR",
-      .default = "Logistic"
-    ),
-    paradigm = case_when(
-      grepl("temporal2", name) ~ "temporal2",
-      grepl("temporal", name) ~ "temporal",
-      .default = "random"
-    )
-  ) %>%
-  filter(paradigm != "temporal") %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100))
-
-
+all_logistic = read_rds(here::here("results", "all_logistic.rds"))
 
 lab_df =
   all_logistic %>%
@@ -221,37 +124,7 @@ png(here::here("manuscript", "figs_final", "acc_pct.png"), width = 6, height = 4
 p
 dev.off()
 
-
-
-## long figure
-long_files = list.files(here::here("results"), pattern = "long")
-
-all_long =
-  map_dfr(long_files,
-          .f = function(x){
-            read_rds(here::here("results", x)) %>%
-              mutate(name = x) %>%
-              mutate(fold = as.numeric(fold))
-          }) %>%
-  mutate(
-    type = case_when(
-      sub(".*\\d(.+).rds.*", "\\1", name) == "xgb" ~ "XGBoost",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "long" ~ "Long",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "lasso" ~ "Lasso",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "rf" ~ "Random Forest",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "fnl" ~ "Linear SoFR",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "nlfnl" ~ "Nonlinear SoFR",
-      .default = "Logistic"
-    ),
-    paradigm = case_when(
-      grepl("temporal", name) ~ "temporal2",
-      # grepl("temporal", name) ~ "temporal",
-      .default = "random"
-    )
-  ) %>%
-  # filter(paradigm != "temporal") %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100))
-
+all_long = read_rds(here::here("results", "all_long.rds"))
 p = all_long %>%
   mutate(long = "Long") %>%
   bind_rows(all_logistic %>% mutate(long = "Default")) %>%
@@ -281,9 +154,6 @@ png(here::here("manuscript", "figs_final", "long_acc.png"), width = 8, height = 
 p
 dev.off()
 ## oversampling
-ov_files = list.files(here::here("results"), pattern = "over", full.names = TRUE)
-
-small = ov_files[c(2, 3, 5, 9, 10, 13)]
 
 small = c(here::here("results", "prediction_res_100over.rds"),
           here::here("results", "prediction_res_500over.rds"),

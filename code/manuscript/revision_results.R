@@ -8,212 +8,218 @@ covars = read_rds(here::here("data", "covariates_accel_mortality_df.rds"))
 covars_y = read_rds(here::here("data", "covariates_accel_df_paxy.rds"))
 library(gt)
 
-## --- comparison of ADEPT and SC ---- ##
-sc_30m_100 = read_rds(here::here("results",
-                              "prediction_res_sc_100.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "30_min",
-         type = "unweighted",
-         paradigm = "random")
-sc_30m_100_t = read_rds(here::here("results",
-                               "prediction_res_temporal_sc_100.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "30_min",
-         type = "unweighted",
-         paradigm = "temporal")
+if(!file.exists(here::here("results", "all_revision_results.rds"))){
+  ## --- comparison of ADEPT and SC ---- ##
+  sc_30m_100 = read_rds(here::here("results",
+                                   "prediction_res_sc_100.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "30_min",
+           type = "unweighted",
+           paradigm = "random")
+  sc_30m_100_t = read_rds(here::here("results",
+                                     "prediction_res_temporal_sc_100.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "30_min",
+           type = "unweighted",
+           paradigm = "temporal")
 
-sc_3min_100 = read_rds(here::here("results",
-                        "prediction_res_scs_100.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "3_min",
-         type = "unweighted",
-         paradigm = "random")
-sc_3min_100_t = read_rds(here::here("results",
-                         "prediction_res_temporal_scs_100.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "3_min",
-         type = "unweighted",
-         paradigm = "temporal")
+  sc_3min_100 = read_rds(here::here("results",
+                                    "prediction_res_scs_100.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "3_min",
+           type = "unweighted",
+           paradigm = "random")
+  sc_3min_100_t = read_rds(here::here("results",
+                                      "prediction_res_temporal_scs_100.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "3_min",
+           type = "unweighted",
+           paradigm = "temporal")
 
-ad_30min_100 = read_rds(here::here("results", "prediction_res_100_30min.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "30_min",
-         type = "unweighted",
-         paradigm = "random") %>%
-  mutate(fold = as.character(fold))
-
-
-ad_30min_100_t = read_rds(here::here("results", "prediction_res_temporal_100_30min.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "30_min",
-         type = "unweighted",
-         paradigm = "temporal") %>%
-  mutate(fold = as.character(fold))
-
-ad_30min_1541_t = read_rds(here::here("results", "prediction_res_temporal_30min.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "30_min",
-         type = "unweighted",
-         paradigm = "temporal") %>%
-  mutate(fold = as.character(fold))
-
-sc_30min_1541_t = read_rds(here::here("results", "prediction_res_temporal_30min_sc.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "30_min",
-         type = "unweighted",
-         paradigm = "temporal") %>%
-  mutate(fold = as.character(fold))
-
-ad_30min_5302 = read_rds(here::here("results", "prediction_res_30min.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "30_min",
-         type = "unweighted",
-         paradigm = "random") %>%
-  mutate(fold = as.character(fold))
-
-sc_30min_5302 = read_rds(here::here("results", "prediction_res_30min_sc.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "30_min",
-         type = "unweighted",
-         paradigm = "random") %>%
-  mutate(fold = as.character(fold))
+  ad_30min_100 = read_rds(here::here("results", "prediction_res_100_30min.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "30_min",
+           type = "unweighted",
+           paradigm = "random") %>%
+    mutate(fold = as.character(fold))
 
 
-ad_3min_100 = read_rds(here::here("results",
-                             "prediction_res_100.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "3_min",
-         type = "unweighted",
-         paradigm = "random")
+  ad_30min_100_t = read_rds(here::here("results", "prediction_res_temporal_100_30min.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "30_min",
+           type = "unweighted",
+           paradigm = "temporal") %>%
+    mutate(fold = as.character(fold))
 
-ad_3min_100_t = read_rds(here::here("results",
-                              "prediction_res_temporal_100.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "3_min",
-         type = "unweighted",
-         paradigm = "temporal")
+  ad_30min_1541_t = read_rds(here::here("results", "prediction_res_temporal_30min.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "30_min",
+           type = "unweighted",
+           paradigm = "temporal") %>%
+    mutate(fold = as.character(fold))
 
-ad_3min_13367 = read_rds(here::here("results", "prediction_res_13367.rds")) %>%
-  mutate(fold = as.character(fold)) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "3_min",
-         type = "unweighted",
-         paradigm = "random")
-ad_3min_13367w = read_rds(here::here("results", "prediction_res_13367wtd.rds"))%>%
-  mutate(fold = as.character(fold)) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "3_min",
-         type = "weighted",
-         paradigm = "random")
+  sc_30min_1541_t = read_rds(here::here("results", "prediction_res_temporal_30min_sc.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "30_min",
+           type = "unweighted",
+           paradigm = "temporal") %>%
+    mutate(fold = as.character(fold))
 
-sc_3min_13367 = read_rds(here::here("results", "prediction_res_scs_13367.rds"))%>%
-  mutate(fold = as.character(fold)) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "3_min",
-         type = "unweighted",
-         paradigm = "random")
+  ad_30min_5302 = read_rds(here::here("results", "prediction_res_30min.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "30_min",
+           type = "unweighted",
+           paradigm = "random") %>%
+    mutate(fold = as.character(fold))
 
-
-sc_3min_13367w = read_rds(here::here("results", "prediction_res_scs_13367wtd.rds"))%>%
-  mutate(fold = as.character(fold)) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "3_min",
-         type = "weighted",
-         paradigm = "random")
-
-ad_3min_10770_t = read_rds(here::here("results", "prediction_res_temporal2_10770.rds"))%>%
-  mutate(fold = as.character(fold)) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "3_min",
-         type = "unweighted",
-         paradigm = "temporal")
-
-ad_3min_10770w_t = read_rds(here::here("results", "prediction_res_temporal2_10770wtd.rds"))%>%
-  mutate(fold = as.character(fold)) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "adept",
-         time = "3_min",
-         type = "weighted",
-         paradigm = "temporal")
-
-sc_3min_10770_t = read_rds(here::here("results", "prediction_res_temporal_scs_10770.rds"))%>%
-  mutate(fold = as.character(fold)) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "3_min",
-         type = "unweighted",
-         paradigm = "temporal")
-sc_3min_10770w_t = read_rds(here::here("results", "prediction_res_temporal_scs_10770wtd.rds"))%>%
-  mutate(fold = as.character(fold)) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "3_min",
-         type = "weighted",
-         paradigm = "temporal")
-
-sc_30min_15374w_t = read_rds(here::here("results", "prediction_res_temporal_sc_15374wtd.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "30_min",
-         type = "weighted",
-         paradigm = "temporal") %>%
-  mutate(fold = as.character(fold))
-
-sc_30min_15374w = read_rds(here::here("results", "prediction_res_sc_15374wtd.rds")) %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100),
-         algorithm = "stepcount",
-         time = "30_min",
-         type = "weighted",
-         paradigm = "random") %>%
-  mutate(fold = as.character(fold))
-rf = read_rds(here::here("results", "prediction_res_1000rf.rds"))
+  sc_30min_5302 = read_rds(here::here("results", "prediction_res_30min_sc.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "30_min",
+           type = "unweighted",
+           paradigm = "random") %>%
+    mutate(fold = as.character(fold))
 
 
-# make big results file by binding everything together
+  ad_3min_100 = read_rds(here::here("results",
+                                    "prediction_res_100.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "3_min",
+           type = "unweighted",
+           paradigm = "random")
 
-all_res = bind_rows(sc_30m_100,
-                    sc_30m_100_t,
-                    sc_3min_100,
-                    sc_3min_100_t,
-                    ad_30min_100,
-                    ad_30min_100_t,
-                    ad_30min_1541_t,
-                    sc_30min_1541_t,
-                    ad_30min_5302,
-                    sc_30min_5302,
-                    ad_3min_100,
-                    ad_3min_100_t,
-                    ad_3min_13367,
-                    ad_3min_13367w,
-                    sc_3min_13367,
-                    sc_3min_13367w,
-                    ad_3min_10770_t,
-                    ad_3min_10770w_t,
-                    sc_3min_10770_t,
-                    sc_3min_10770w_t,
-                    sc_30min_15374w_t,
-                    sc_30min_15374w) %>%
-  select(-fold, -n_tar, -n_target)
+  ad_3min_100_t = read_rds(here::here("results",
+                                      "prediction_res_temporal2_100.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "3_min",
+           type = "unweighted",
+           paradigm = "temporal")
+
+  ad_3min_13367 = read_rds(here::here("results", "prediction_res_13367.rds")) %>%
+    mutate(fold = as.character(fold)) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "3_min",
+           type = "unweighted",
+           paradigm = "random")
+  ad_3min_13367w = read_rds(here::here("results", "prediction_res_13367wtd.rds"))%>%
+    mutate(fold = as.character(fold)) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "3_min",
+           type = "weighted",
+           paradigm = "random")
+
+  sc_3min_13367 = read_rds(here::here("results", "prediction_res_scs_13367.rds"))%>%
+    mutate(fold = as.character(fold)) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "3_min",
+           type = "unweighted",
+           paradigm = "random")
 
 
-all_res
+  sc_3min_13367w = read_rds(here::here("results", "prediction_res_scs_13367wtd.rds"))%>%
+    mutate(fold = as.character(fold)) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "3_min",
+           type = "weighted",
+           paradigm = "random")
+
+  ad_3min_10770_t = read_rds(here::here("results", "prediction_res_temporal2_10770.rds"))%>%
+    mutate(fold = as.character(fold)) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "3_min",
+           type = "unweighted",
+           paradigm = "temporal")
+
+  ad_3min_10770w_t = read_rds(here::here("results", "prediction_res_temporal2_10770wtd.rds"))%>%
+    mutate(fold = as.character(fold)) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "adept",
+           time = "3_min",
+           type = "weighted",
+           paradigm = "temporal")
+
+  sc_3min_10770_t = read_rds(here::here("results", "prediction_res_temporal_scs_10770.rds"))%>%
+    mutate(fold = as.character(fold)) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "3_min",
+           type = "unweighted",
+           paradigm = "temporal")
+  sc_3min_10770w_t = read_rds(here::here("results", "prediction_res_temporal_scs_10770wtd.rds"))%>%
+    mutate(fold = as.character(fold)) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "3_min",
+           type = "weighted",
+           paradigm = "temporal")
+
+  sc_30min_15374w_t = read_rds(here::here("results", "prediction_res_temporal_sc_15374wtd.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "30_min",
+           type = "weighted",
+           paradigm = "temporal") %>%
+    mutate(fold = as.character(fold))
+
+  sc_30min_15374w = read_rds(here::here("results", "prediction_res_sc_15374wtd.rds")) %>%
+    mutate(across(starts_with("rank"), ~.x / n * 100),
+           algorithm = "stepcount",
+           time = "30_min",
+           type = "weighted",
+           paradigm = "random") %>%
+    mutate(fold = as.character(fold))
+  rf = read_rds(here::here("results", "prediction_res_1000rf.rds"))
+
+
+  # make big results file by binding everything together
+
+  all_res = bind_rows(sc_30m_100,
+                      sc_30m_100_t,
+                      sc_3min_100,
+                      sc_3min_100_t,
+                      ad_30min_100,
+                      ad_30min_100_t,
+                      ad_30min_1541_t,
+                      sc_30min_1541_t,
+                      ad_30min_5302,
+                      sc_30min_5302,
+                      ad_3min_100,
+                      ad_3min_100_t,
+                      ad_3min_13367,
+                      ad_3min_13367w,
+                      sc_3min_13367,
+                      sc_3min_13367w,
+                      ad_3min_10770_t,
+                      ad_3min_10770w_t,
+                      sc_3min_10770_t,
+                      sc_3min_10770w_t,
+                      sc_30min_15374w_t,
+                      sc_30min_15374w) %>%
+    select(-fold, -n_tar, -n_target)
+
+  write_rds(all_res, here::here("results", "all_revision_results.rds"))
+
+} else {
+  all_res = read_rds(here::here("results", "all_revision_results.rds"))
+}
+
+
 
 
 ## all results using 3 min of data

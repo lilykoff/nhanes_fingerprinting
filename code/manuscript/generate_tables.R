@@ -51,87 +51,8 @@ tbl_merge(
   kableExtra::kbl("latex", booktabs = TRUE)
 
 ### accuracies for n=100,n=500
-
-res_100 = c(list.files(here::here("results"), pattern = "*.\\_100.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100fnl.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100nlfnl.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100lasso.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100xgb.rds"),
-            list.files(here::here("results"), pattern = "*.\\_100rf.rds"))
-
-all_100 =
-  map_dfr(res_100,
-          .f = function(x){
-            read_rds(here::here("results", x)) %>%
-              mutate(name = x)
-          }) %>%
-  mutate(
-    type = case_when(
-      sub(".*\\d(.+).rds.*", "\\1", name) == "xgb" ~ "XGBoost",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "long" ~ "Long",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "lasso" ~ "Lasso",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "rf" ~ "Random Forest",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "fnl" ~ "Linear SoFR",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "nlfnl" ~ "Nonlinear SoFR",
-      .default = "Logistic"
-    ),
-    paradigm = case_when(
-      grepl("temporal2", name) ~ "temporal2",
-      grepl("temporal", name) ~ "temporal",
-      .default = "random"
-    )
-  ) %>%
-  filter(paradigm != "temporal")
-
-
-
-res_500 = c(list.files(here::here("results"), pattern = "*.\\_500.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500fnl.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500nlfnl.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500lasso.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500xgb.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500rf.rds"))
-
-
-temp = read_rds(here::here("results", "prediction_res_500rf.rds"))
-
-temp %>%
-  mutate(r1 = rank1 / n * 100) %>%
-  summarize(r = median(r1))
-
-temp = read_rds(here::here("results", "prediction_res_100rf.rds"))
-temp %>%
-  mutate(r1 = rank1 / n * 100) %>%
-  summarize(r = median(r1))
-
-temp %>%
-  mutate(r1 = rank1 / n * 100) %>%
-  summarize(r = median(r1))
-all_500 =
-  map_dfr(res_500,
-          .f = function(x){
-            read_rds(here::here("results", x)) %>%
-              mutate(name = x) %>%
-              mutate(fold = as.numeric(fold))
-          }) %>%
-  mutate(
-    type = case_when(
-      sub(".*\\d(.+).rds.*", "\\1", name) == "xgb" ~ "XGBoost",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "long" ~ "Long",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "lasso" ~ "Lasso",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "rf" ~ "Random Forest",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "fnl" ~ "Linear SoFR",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "nlfnl" ~ "Nonlinear SoFR",
-      .default = "Logistic"
-    ),
-    paradigm = case_when(
-      grepl("temporal2", name) ~ "temporal2",
-      grepl("temporal", name) ~ "temporal",
-      .default = "random"
-    )
-  ) %>%
-  filter(paradigm != "temporal")
-
+all_100 = read_rds(here::here("results", "all_n100.rds"))
+all_500 = read_rds(here::here("results", "all_n500.rds"))
 all_100 %>%
   select(contains("pct"), type, paradigm) %>%
   group_by(type, paradigm) %>%
@@ -161,7 +82,6 @@ all_100 %>%
   kableExtra::kbl("latex", booktabs = TRUE)
 
 
-## RF RUN THIS
 all_100 %>%
   bind_rows(all_500 %>% mutate(fold = as.character(fold))) %>%
   mutate(across(contains("rank"), ~(.x / n)*100)) %>%
@@ -182,41 +102,7 @@ all_100 %>%
   kableExtra::kbl("latex", booktabs = TRUE)
 
 
-
-res_logistic = c(list.files(here::here("results"), pattern = "*.\\_100.rds"),
-            list.files(here::here("results"), pattern = "*.\\_500.rds"),
-            list.files(here::here("results"), pattern = "*.\\_1000.rds"),
-            list.files(here::here("results"), pattern = "*.\\_2500.rds"),
-            list.files(here::here("results"), pattern = "*.\\_5000.rds"),
-            list.files(here::here("results"), pattern = "*.\\_10000.rds"),
-            list.files(here::here("results"), pattern = "*.\\_13367.rds"),
-            list.files(here::here("results"), pattern = "*.\\_10770.rds"))
-
-all_logistic =
-  map_dfr(res_logistic,
-          .f = function(x){
-            read_rds(here::here("results", x)) %>%
-              mutate(name = x) %>%
-              mutate(fold = as.numeric(fold))
-          }) %>%
-  mutate(
-    type = case_when(
-      sub(".*\\d(.+).rds.*", "\\1", name) == "xgb" ~ "XGBoost",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "long" ~ "Long",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "lasso" ~ "Lasso",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "rf" ~ "Random Forest",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "fnl" ~ "Linear SoFR",
-      sub(".*\\d(.+).rds.*", "\\1", name) == "nlfnl" ~ "Nonlinear SoFR",
-      .default = "Logistic"
-    ),
-    paradigm = case_when(
-      grepl("temporal2", name) ~ "temporal2",
-      grepl("temporal", name) ~ "temporal",
-      .default = "random"
-    )
-  ) %>%
-  filter(paradigm != "temporal") %>%
-  mutate(across(starts_with("rank"), ~.x / n * 100))
+all_logistic = read_rds(here::here("results", "all_logistic.rds"))
 
 all_logistic %>%
   # filter(n %in% c(100, 500) & type != "Long") %>%
@@ -238,24 +124,7 @@ all_logistic %>%
 
 ## long table
 
-long_files = list.files(here::here("results"), pattern = "long")
-# long_files = long_files[!grepl("subset", long_files)]
-
-all_long =
-  map_dfr(long_files,
-          .f = function(x){
-            read_rds(here::here("results", x)) %>%
-              mutate(name = x) %>%
-              mutate(fold = as.numeric(fold))
-          }) %>%
-  mutate(type =
-           if_else(grepl("subset", name), "Regular", "Long"),
-         paradigm = if_else(grepl("temporal", name), "Temporal", "Random")) %>%
-  mutate(across(contains("rank"), ~(.x / n) * 100)) %>%
-  mutate(n = if_else(n == 7929, 8018, n)) %>%
-  group_by(name, n, type, paradigm) %>%
-  summarize(across(contains("rank"), median), .groups = "drop") %>%
-  select(-name)
+all_long = read_rds(here::here("results", "all_long.rds"))
 
 reg = all_logistic %>%
   group_by(n, type, paradigm) %>%
@@ -279,31 +148,21 @@ comb %>%
   mutate(across(contains("rank"), ~sprintf("%.2g", signif(.x, 2)))) %>%
   kableExtra::kbl("latex", booktabs = TRUE)
 
-long_files = list.files(here::here("results"), pattern = "long")
-long_files = c(here::here("results", "prediction_res_10129long.rds"),
-               here::here("results", "prediction_res_10129longsubset.rds"),
-               here::here("results", "prediction_res_temporal_8018long.rds"),
-               here::here("results", "prediction_res_temporal_8018longsubset.rds"))
-all_long =
-  map_dfr(long_files,
-          .f = function(x){
-            read_rds(x) %>%
-              mutate(name = x) %>%
-              mutate(fold = as.numeric(fold))
-          })
+# long_files = list.files(here::here("results"), pattern = "long")
+# long_files = c(here::here("results", "prediction_res_10129long.rds"),
+#                here::here("results", "prediction_res_10129longsubset.rds"),
+#                here::here("results", "prediction_res_temporal_8018long.rds"),
+#                here::here("results", "prediction_res_temporal_8018longsubset.rds"))
+# all_long =
+#   map_dfr(long_files,
+#           .f = function(x){
+#             read_rds(x) %>%
+#               mutate(name = x) %>%
+#               mutate(fold = as.numeric(fold))
+#           })
 
 ## oversampling
-ov_files = list.files(here::here("results"), pattern = "over", full.names = TRUE)
-
-small = ov_files[c(2:3, 5, 10, 11, 14)]
-
-res_over = map_dfr(small, .f = \(x) read_rds(x) %>% mutate(name = x)) %>%
-  ungroup() %>%
-  mutate(paradigm = if_else(grepl("temporal", name), "temporal", "random"),
-         across(contains("rank"), ~.x / n)) %>%
-  group_by(paradigm, n, factor) %>%
-  summarize(across(contains("rank"), ~median(.x) * 100),
-            .groups = "drop")
+res_over = read_rds(here::here("results", "all_oversample.rds"))
 
 default = all_logistic %>%
   filter(type == "Logistic") %>%
@@ -328,13 +187,13 @@ read_rds(small[1]) %>%
 
 
 
-res_over = map_dfr(small, .f = \(x) read_rds(x) %>% mutate(name = x)) %>%
-  ungroup() %>%
-  mutate(paradigm = if_else(grepl("temporal", name), "temporal", "random"),
-         across(contains("rank"), ~.x / n)) %>%
-  group_by(paradigm, n, factor) %>%
-  summarize(across(contains("rank"), ~median(.x) * 100),
-            .groups = "drop")
+# res_over = map_dfr(small, .f = \(x) read_rds(x) %>% mutate(name = x)) %>%
+#   ungroup() %>%
+#   mutate(paradigm = if_else(grepl("temporal", name), "temporal", "random"),
+#          across(contains("rank"), ~.x / n)) %>%
+#   group_by(paradigm, n, factor) %>%
+#   summarize(across(contains("rank"), ~median(.x) * 100),
+#             .groups = "drop")
 
 default = all_logistic %>%
   filter(type == "Logistic") %>%
@@ -347,7 +206,7 @@ default = all_logistic %>%
   mutate(factor = 1 / n,
          factor = "default")
 
-result_ov = read_rds(here::here("data", "all_fprint_res_ov.rds"))
+result_ov = read_rds(here::here("results", "all_fprint_res_ov.rds"))
 
 
 res_over %>%
@@ -370,45 +229,8 @@ res_over %>%
 
 
 ## weighting table
-weight_files = list.files(here::here("results"), pattern = "wtd", full.names = TRUE)
-weight_files
-
-all_wt = map_dfr(weight_files, read_rds) %>%
-  mutate(across(contains("rank"), ~.x / n * 100)) %>%
-  mutate(type = "Weighted",
-         paradigm = c("Random", "Temporal"))
-
-all_logistic_lg =
-  all_logistic %>%
-  filter(n %in% c(13367, 10770)) %>%
-  mutate(paradigm = c("Random", "Temporal"))
-
-all_ovsamp = read_rds(here::here("results", "prediction_res_temporal2_10770over.rds"))
-
-ovsamp =
-  tibble(rank1 = 464,
-         rank5 = 1120,
-         rank1pct = 3400,
-         rank5pct = 5584,
-         n = 10770) %>%
-  mutate(paradigm = "Temporal",
-         type = "Oversampled") %>%
-  mutate(across(contains("rank"), ~.x / n * 100))
-
-long_lg = map_dfr(.x = c(here::here("results",
-                                    "prediction_res_temporal_8018long.rds"),
-                         here::here("results",
-                                    "prediction_res_10129long.rds")),
-                  .f = read_rds) %>%
-  mutate(paradigm = c("Temporal", "Random"),
-         type = "Long") %>%
-  mutate(across(contains("rank"), ~.x / n * 100))
-
-
-all_wt %>%
-  bind_rows(all_logistic_lg) %>%
-  bind_rows(ovsamp) %>%
-  bind_rows(long_lg) %>%
+all = read_rds(here::here("results", "notable_res.rds"))
+all %>%
   select(contains("rank"), n, type, paradigm) %>%
   mutate(across(contains("rank"), ~sprintf("%.2g", signif(.x, 2)))) %>%
   group_by(paradigm) %>%
@@ -418,11 +240,11 @@ all_wt %>%
   kableExtra::kbl("latex", booktabs = TRUE)
 
 ## two stage models
-two_stage = read_rds(here::here("results", "prediction_res_13367boost.rds"))
-two_stage
-
-two_stage2 = read_rds(here::here("results", "prediction_res_temporal_10770boost.rds"))
-two_stage2
+# two_stage = read_rds(here::here("results", "prediction_res_13367boost.rds"))
+# two_stage
+#
+# two_stage2 = read_rds(here::here("results", "prediction_res_temporal_10770boost.rds"))
+# two_stage2
 # bouts
 
 bouts = read_csv(here::here("data", "walking_segments.csv.gz"))
