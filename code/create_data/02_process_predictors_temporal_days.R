@@ -20,6 +20,8 @@ if(!file.exists(here::here("data", "lily", "data", "train_test_temporal_days.rds
   write_rds(pred_dist, here::here("data", "lily", "data", "train_test_temporal_days.rds"))
 }
 
+
+
 all_preds =
   files %>%
   map(., .f = function(x){
@@ -69,4 +71,5 @@ filename_df =
 write_rds(filename_df, here::here("data", "lily", "data", "fingerprint_folds_temporal_days.rds"))
 
 
+# x = read_csv(here::here("data", "lily", "data", "all_grid_cells_temporal_days.csv.gz"))
 

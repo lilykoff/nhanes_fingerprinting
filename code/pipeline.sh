@@ -288,3 +288,4 @@ Rnosave summarize_subsets.R -J SUMM_2500 --export=INPUT=2500 --cpus-per-task=8 -
 Rnosave summarize_subsets.R -J SUMM_5000 --export=INPUT=5000 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 
 
+Rnosave 01_get_grid_cell_predictors_long_temporal_v2.R -J GCPREDS_LONG_TEMP --mem=15G --array=1-200 --time=3-00 -o eofiles/%x_%A_%a.out -e eofiles/%x_%A_%a.err

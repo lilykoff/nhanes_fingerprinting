@@ -107,30 +107,19 @@ for (index in seq(max_n)) {
         select(second) %>%
         distinct()
 
-      ## take 30 mins randomly and 30 mins consecutively
-
       set.seed(123)
       seconds_random =
         seconds %>%
         slice_sample(n = 3 * 60)
 
       set.seed(123)
-      # start_ind = sample(1:(nrow(seconds) - 3 * 60), 1)
-
-      # seconds_consec =
-      #   seconds %>%
-      #   slice(start_ind:(start_ind + (3 * 60) - 1))
-      #
+      
       df_random =
         min_file %>%
         mutate(second = lubridate::floor_date(HEADER_TIMESTAMP, unit = "seconds")) %>%
         filter(second %in% seconds_random$second)
 
-      # df_consec =
-      #   min_file %>%
-      #   mutate(second = lubridate::floor_date(HEADER_TIMESTAMP, unit = "seconds")) %>%
-      #   filter(second %in% seconds_consec$second)
-      #
+      
       rm(min_file) # free up space
 
       # only keep full seconds for fingerprinting
