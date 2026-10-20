@@ -4,48 +4,7 @@ library(patchwork)
 bench = read_rds(here::here("results", "bench_adept.rds"))
 
 
-subsets100 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_100_v3.rds")) %>%
-  mutate(across(-n_target, ~.x / n_target * 100)) %>%
-  mutate(train_size = 100)
-
-# subsets100_v2 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_100_v4.rds")) %>%
-#   mutate(across(-n_target, ~.x / n_target * 100)) %>%
-#   mutate(train_size = 100)
-subsets500 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_500_v3.rds")) %>%
-  mutate(across(-n_target, ~.x / n_target * 100)) %>%
-  mutate(train_size = 500)
-subsets1000 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_1000_v3.rds")) %>%
-  mutate(across(-n_target, ~.x / n_target * 100)) %>%
-  mutate(train_size = 1000)
-subsets2500 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_2500_v3.rds")) %>%
-  mutate(across(-n_target, ~.x / n_target * 100)) %>%
-  mutate(train_size = 2500)
-
-
-subsets2500 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_2500_v4.rds")) %>%
-  mutate(across(-n_target, ~.x / n_target * 100)) %>%
-  mutate(train_size = 2500)
-
-subsets5000 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_5000_v3.rds")) %>%
-  mutate(across(-n_target, ~.x / n_target * 100)) %>%
-  mutate(train_size = 5000)
-
-subsets5000 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_5000_v4.rds")) %>%
-  mutate(across(-n_target, ~.x / n_target * 100)) %>%
-  mutate(train_size = 5000)
-
-subsets7500 = read_rds(here::here("results", "prediction_res_subsets_13367wtd_7500_v4.rds")) %>%
-  mutate(across(-n_target, ~.x / n_target * 100)) %>%
-  mutate(train_size = 7500)
-
-all = read_rds(here::here("results", "prediction_res_13367wtd.rds")) %>%
-  mutate(across(-n_target, ~.x / n_target * 100)) %>%
-  mutate(train_size = 13367)
-
-comb =
-  subsets100 %>%
-  bind_rows(subsets500, subsets1000, subsets2500, subsets5000, subsets7500, all) %>%
-  select(-fold)
+comb = read_rds(here::here("results", "subset_train_results.rds"))
 
 comb %>%
   pivot_longer(cols = contains("rank")) %>%
@@ -89,11 +48,11 @@ p2 = comb %>%
   labs(x = "Participants in training data (x100)", y = "Accuracy (%)",
        title = "Accuracy by number of participants in training data") +
   scale_color_manual(values = c("#FF7F00FF", "#654CFFFF"),
-                                labels = c("Rank 1", "Rank 5"),
-                                name = "Metric") +
+                     labels = c("Rank 1", "Rank 5"),
+                     name = "Metric") +
   theme(legend.position = c(0.8, 0.1))
 
-
+p2
 
 p2 / p1 + plot_layout(axes = "collect")
 
