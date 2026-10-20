@@ -24,9 +24,9 @@ get_input = function(default = NA_real_){
 
 size = get_input()
 
-out = paste0("prediction_res_subsets_", "13367wtd_", size, "_v4.rds")
+out = paste0("prediction_res_subsets_", "13367wtd_", size, "_v5.rds")
 
-get_summarized_predictions_full_subset_par(
+get_summarized_predictions_full_subset_par_v2(
   outfile = out,
   dirnum = size,
   pred_dir = paste(
