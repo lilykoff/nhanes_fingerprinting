@@ -48,11 +48,6 @@ comb =
   bind_rows(subsets500, subsets1000, subsets2500, subsets5000, subsets7500, all) %>%
   select(-fold)
 
-comb =
-  subsets1000 %>%
-  bind_rows(subsets500, subsets2500,  subsets7500, all) %>%
-  select(-fold)
-
 
 write_rds(comb, here::here("results", "subset_train_results.rds"))
 
