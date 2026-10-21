@@ -1,0 +1,208 @@
+---
+title: "Nonwear Supplement"
+format: pdf
+editor: source
+execute:
+  echo: false
+  cache: false
+  message: false
+  warning: false
+---
+
+```{r load packages}
+#| include: false 
+
+library(tidyverse)
+theme_set(theme_light(base_size = 12))
+```
+
+```{r read in data}
+#| include: false
+#| cache: true
+
+walking_seg = read_csv(here::here("data", "walking_segments.csv.gz"))
+nhanes_1440_PAXPREDM = read_csv(here::here("data", "nhanes_1440_PAXPREDM.csv.xz"))
+preds = read_rds(here::here("results", "subj_level_preds.rds")) 
+```
+
+```{r manipulate data}
+#| cache: true
+
+# total walking df 
+total_walk = 
+  walking_seg |> 
+  group_by(id) |> 
+  summarize(n_minutes = sum(n_seconds) / 60) |> 
+  ungroup()
+
+# min matrix of nonwear 
+min_mat =
+  nhanes_1440_PAXPREDM %>%
+  select(starts_with("min")) %>%
+  as.matrix()
+
+nonwear = min_mat == 3
+nonwear_day = rowSums(nonwear, na.rm = TRUE)
+
+nonwear_df =
+  nhanes_1440_PAXPREDM %>%
+  select(-starts_with("min")) %>%
+  bind_cols(nonwear_min = nonwear_day)
+
+total_nonwear =
+  nonwear_df %>%
+  group_by(SEQN) %>%
+  summarize(nw = sum(nonwear_min))
+
+nonwear_days = 
+  nonwear_df |> 
+  group_by(SEQN) |> 
+  summarize(across(nonwear_min, ~mean(.x, na.rm = TRUE)), .groups = "drop")
+
+nw_walk = 
+  total_walk |> 
+  left_join(total_nonwear, by = join_by(id == SEQN)) |> 
+  rename(walk_mins = n_minutes,
+         nonwear_mins = nw)
+
+
+joined = total_nonwear %>%
+  left_join(preds, by = c("SEQN" = "true_subject"))
+
+# deciles of nonwear 
+
+deciles = quantile(joined$nw, seq(0, 1, 0.1), na.rm = TRUE)
+joined_summary =
+  joined %>%
+  drop_na() %>%
+  mutate(nw_bin = cut(nw, breaks = deciles, include.lowest = TRUE,
+                      labels = paste("Decile", seq(1:10)))) %>%
+  group_by(nw_bin) %>%
+  summarize(acc = mean(rank1),
+            sd = sd(rank1),
+            se = sd / sqrt(n()),
+            n = n(),
+            .groups = "drop")
+```
+
+The purpose of this vignette is to demonstrate the amount of ADEPT-labeled walking and nonwear in the data, and investigate whether amount of nonwear may be associated with identification accuracy in our models. 
+
+## Amount of walking 
+
+```{r}
+total_walk |> 
+  ggplot(aes(x = n_minutes)) +
+  geom_histogram(binwidth = 5, color = "black", fill = "#666666FF") +
+  scale_x_continuous(limits = c(0, 240), breaks = seq(0, 240, 20)) +
+  labs(x = "Total minutes of walking per participant", y = "Count",
+       title = "Distribution of Walking Across Participants")
+```
+
+Here walking is defined as a bout of at least 10 seconds of steps, with no more than two seconds between steps.
+
+The median [IQR] number of minutes (across all days) per person is `r round(median(total_walk$n_minutes), 2)` [`r round(quantile(total_walk$n_minutes, 0.25), 2)`,
+`r round(quantile(total_walk$n_minutes, 0.75), 2)`].
+
+```{r}
+daily = 
+  walking_seg |> 
+  group_by(id, day) |> 
+  summarize(n_minutes = sum(n_seconds) / 60) |> 
+  group_by(id) |> 
+  summarize(n_minutes = mean(n_minutes, na.rm = TRUE)) |> 
+  ungroup() 
+
+daily |> 
+  ggplot(aes(x = n_minutes)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "#666666FF") +
+  scale_x_continuous(limits = c(0, 30), breaks = seq(0, 60, 5)) +
+  labs(x = "Average daily minutes of walking per participant", y = "Count",
+       title = "Distribution of Daily Walking Across Participants") 
+```
+
+The median [IQR] number of average minutes per person per day is `r round(median(daily$n_minutes), 2)` [`r round(quantile(daily$n_minutes, 0.25), 2)`,
+`r round(quantile(daily$n_minutes, 0.75), 2)`]
+
+## Amount of nonwear 
+
+
+```{r}
+nonwear_days |> 
+  ggplot(aes(x = nonwear_min/60)) +
+  geom_histogram( color = "black", fill = "#666666FF") +
+  scale_x_continuous(limits = c(0, 1440/60), breaks = seq(0, 1440, 120)/60) +
+  labs(x = "Average daily hours of nonwear per participant", y = "Count",
+       title = "Distribution of Daily Nonewar Across Participants")
+```
+
+The median [IQR] average number of daily hours of nonwear per person is `r round(median(nonwear_days$nonwear_min/60), 2)` [`r round(quantile(nonwear_days$nonwear_min/60, 0.25), 2)`,
+`r round(quantile(nonwear_days$nonwear_min/60, 0.75), 2)`].
+
+
+## Nonwear and walking 
+
+```{r}
+
+nw_walk |> 
+  ggplot(aes(x = nonwear_mins / 60, y = walk_mins / 60)) +
+  geom_point(alpha = .05, size = .2, color = "#333333FF") +
+  labs(x = "Nonwear Hours", y = "Walking Hours", title = "Nonwear Time vs. Walking Time by Participant") +
+  theme(panel.grid = element_blank())
+
+```
+
+```{r}
+#| echo: true 
+
+model = lm(nonwear_mins ~ walk_mins, data = nw_walk)
+broom::tidy(model)
+```
+
+
+In general, individuals with more nonwear have fewer walking minutes (which we might expect). 
+
+## Nonwear and identification accuracy 
+
+We can look at identification accuracy in models with $n=100$ subsets vs. nonwear hours. 
+
+```{r}
+joined %>%
+  drop_na() %>%
+  ggplot(aes(x = nw / 60, y = mean_pred, color = factor(rank1))) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  scale_x_continuous(breaks=seq(0,24*8, 24)) +
+  labs(x = "Total nonwear hours", y = "Probability from correct model",
+       color = "Participant correctly predicted",
+       title = "Predicted Probabilities vs. Nonwear Time") +
+  theme_light() +
+  theme(legend.position = "bottom") +
+  guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))  +
+  scale_color_manual(values = c("#666666FF", "#0099CCFF"), labels = c("No", "Yes")) +
+  theme(panel.grid = element_blank())
+
+```
+
+
+The correctly predicted participants seem to occur at similar frequencies across all values of nonwear. We can investigate further by binning nonwear into deciles and looking at accuracy within each decile.  
+
+```{r}
+
+joined_summary %>%
+  ggplot(aes(x = nw_bin)) +
+  geom_point(aes(y = acc), size = 2, color = "#333333FF") +
+  geom_errorbar(aes(ymin = acc - 1.96 * se, ymax = acc + 1.96 * se, x = nw_bin), width = 0.2, linewidth = 1.1, color = "#333333FF") +
+  scale_y_continuous(limits = c(0.5, 1)) +
+  labs(x = "Nonwear hours (deciles)", y = "Mean (95% CI) Rank 1 Accuracy", title = "Accuracy vs. Nonwear in Subgroups of n=100") +
+  theme(axis.text.x = element_text(size = 8))
+
+
+```
+
+There doesn't appear to be a relationship between nonwear and accuracy. Finally, we can fit a model where the outcome is whether the individual was correctly predicted and the predictor is nonwear minutes: 
+
+```{r}
+joined_mod = joined |> rename(nonwear_min = nw)
+pred_model = glm(rank1 ~ nonwear_min, family = binomial(), data = joined_mod)
+broom::tidy(pred_model, exp = TRUE)
+```
+Nonwear time is not significantly associated with correct prediction for a participant. 
