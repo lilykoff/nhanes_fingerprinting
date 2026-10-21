@@ -296,3 +296,4 @@ Rnosave summarize_subsets_v2.R -J SUMM_500 --export=INPUT=500 --cpus-per-task=16
 Rnosave summarize_subsets_v2.R -J SUMM_1000 --export=INPUT=1000 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave summarize_subsets_v2.R -J SUMM_2500 --export=INPUT=2500 --cpus-per-task=8 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
 Rnosave summarize_subsets_v2.R -J SUMM_5000 --export=INPUT=5000 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu
+Rnosave summarize_subsets_v2.R -J SUMM_7500 --export=INPUT=7500 --cpus-per-task=16 --mem=50G --time=3-00 -o eofiles/%x_%A.out -e eofiles/%x_%A.err --mail-type=FAIL,END --mail-user=lkoffma2@jh.edu

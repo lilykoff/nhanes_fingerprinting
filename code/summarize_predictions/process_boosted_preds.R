@@ -37,12 +37,33 @@ result =
   res_df %>%
   bind_rows(missing_ids %>% select(-id))
 
+# result_summ =
+#   result %>%
+#   summarize(n = n(),
+#             across(c(rank1, rank5), ~sum(.x) / nrow(result))) %>%
+#   mutate(fold = 1,
+#          n_target = n)
+
+# result_summ =
+#   result %>%
+#   mutate(rank1pct = if_else(rank <= (10770 * .01), 1, 0),
+#          rank5pct = if_else(rank <= (10770 * .05), 1, 0)) %>%
+#   summarize(n = n(),
+#             across(starts_with("rank"), ~sum(.x, na.rm = TRUE) / n),
+#             .groups = "drop") %>%
+#   mutate(fold = 1,
+#          n_target = n)
+
 result_summ =
   result %>%
+  mutate(rank1pct = if_else(rank <= (13367 * .01), 1, 0),
+         rank5pct = if_else(rank <= (13367 * .05), 1, 0)) %>%
   summarize(n = n(),
-            across(c(rank1, rank5), ~sum(.x) / nrow(result))) %>%
+            across(starts_with("rank"), ~sum(.x, na.rm = TRUE)),
+            .groups = "drop") %>%
   mutate(fold = 1,
          n_target = n)
+
 
 write_rds(result_summ, here::here("data", "lily", "data", "fingerprint_prediction_results", "prediction_res_13367boost.rds"))
 

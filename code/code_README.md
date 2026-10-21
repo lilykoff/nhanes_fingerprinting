@@ -99,6 +99,9 @@ Files to summarize the results of the models. For each script, result is file in
 
 ## manuscript
 Code to generate figures and tables for manuscript 
++ `combine_results.R` takes the individual summarized results for each model and combines into data frames that make tables and figures
++ `generate_all_tables.R`: generate all manuscript tables
++ `generate_all_figures.R`: generate all manuscript figures
 
 Other: 
 + `pipeline.sh`: bash code to run scripts on JHPCE cluster 
